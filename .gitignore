@@ -89,6 +89,5 @@ target/
 .mypy_cache/
 
 src/ocr/
-src/segmentation/
 notebooks/
 models/
