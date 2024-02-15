@@ -1,0 +1,34 @@
+{
+    "pipeline": {
+        "WordSegmentation": {
+            "model_path": "models/segmentation/model-29-0.1751.ckpt",
+            "config_path": "src/segmentation/scripts/segm_config.json"
+        },
+        "RestoreImageAngle": {
+            "restoring_class_names": ["text_line"]
+        },
+        "ContourPostprocessors": {
+            "class2postprocessors": {
+                "class_name_1": {
+                    "BboxFromContour": {},
+                    "UpscaleBbox": {
+                        "upscale_bbox": [1.4, 2.3]
+                    },
+                    "CropByBbox": {}
+                },
+                "class_name_2": {
+                    "BboxFromContour": {},
+                    "UpscaleBbox": {
+                        "upscale_bbox": [1.4, 2.3]
+                    },
+                    "CropByBbox": {}
+                },
+                "text_line": {}
+            }
+        },
+        "OpticalCharacterRecognition": {
+            "model_path": "models/ocr/CRNN-82-0.4128.ckpt",
+            "config_path": "src/ocr/scripts/htr_config.yaml"
+        }
+    }
+}
