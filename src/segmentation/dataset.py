@@ -223,12 +223,7 @@ def is_valid_polygon(polygon):
     Args:
         polygon (shapely.geometry.Polygon): The polygon.
     """
-    if (
-        polygon.length < 1
-        or polygon.area <= 0
-    ):
-        return False
-    return True
+    return polygon.length >= 1 and polygon.area > 0
 
 
 class MakeShrinkMask:
@@ -257,12 +252,11 @@ class MakeShrinkMask:
         """
         poly = Polygon(polygon)
         pco = pyclipper.PyclipperOffset()
-        pco.AddPath(polygon, pyclipper.JT_ROUND,
-                    pyclipper.ET_CLOSEDPOLYGON)
+        pco.AddPath(polygon, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
         if not is_valid_polygon(poly):
             return False
         distance = int(poly.area * (1 - self.shrink_ratio ** 2) / poly.length)
-        # polygon could be splitted to several parts after shrink operation
+        # polygon may split into several parts after shrink operation
         # https://stackoverflow.com/a/33902816
         shrinked_bboxes = pco.Execute(-distance)
         for shrinked_bbox in shrinked_bboxes:
@@ -294,7 +288,8 @@ class MakeBorderMask:
         canvas = (canvas > 0.5).astype(np.uint8)  # binarize mask
         return canvas
 
-    def _distance_matrix(self, xs, ys, a, b):
+    @staticmethod
+    def distance_matrix(xs, ys, a, b):
         x1, y1 = a[0], a[1]
         x2, y2 = b[0], b[1]
         u1 = (((xs - x1) * (x2 - x1)) + ((ys - y1) * (y2 - y1)))
@@ -304,20 +299,19 @@ class MakeBorderMask:
         iy = y1 + u * (y2 - y1)
         distance = np.sqrt(np.square(xs - ix) + np.square(ys - iy))
         distance2 = np.sqrt(np.fmin(np.square(xs - x1) + np.square(ys - y1),
-                            np.square(xs - x2) + np.square(ys - y2)))
+                                    np.square(xs - x2) + np.square(ys - y2)))
         distance[u >= 1] = distance2[u >= 1]
         return distance
 
     def add_border_to_mask(self, polygon):
         """Add new polygon border to the canvas.
-
         Args:
             polygon (np.array): Array of polygon coordinates
                 np.array([[x, y], ...])
         """
         polygon = np.array(polygon)
-        assert polygon.ndim == 2
-        assert polygon.shape[1] == 2
+        assert polygon.ndim == 2, "The polygon must be a 2D array."
+        assert polygon.shape[1] == 2, "The polygon must have 2 columns."
         poly = Polygon(polygon)
         if not is_valid_polygon(poly):
             return False
@@ -345,7 +339,7 @@ class MakeBorderMask:
             (polygon.shape[0], height, width), dtype=np.float32)
         for i in range(polygon.shape[0]):
             j = (i + 1) % polygon.shape[0]
-            absolute_distance = self._distance_matrix(
+            absolute_distance = self.distance_matrix(
                 xs, ys, polygon[i], polygon[j])
             distance_map[i] = np.clip(absolute_distance / distance, 0, 1)
         distance_map = np.min(distance_map, axis=0)
