@@ -3,6 +3,8 @@ import os
 import math
 import logging
 import time
+import numpy as np
+
 from tqdm import tqdm
 
 from src.segmentation.metrics import get_iou, get_f1_score, AverageMeter, IOUMetric
@@ -106,3 +108,72 @@ def load_pretrain_model(weights_path, model, logger=None):
         else:
             logger.info('Weights {} were not loaded'.format(key))
     return new_dict
+
+
+"""
+Source: https://stackoverflow.com/questions/71998978/early-stopping-in-pytorch
+
+Early stops the training if validation loss doesn't improve after a given patience.
+Source: https://github.com/Bjarten/early-stopping-pytorch/blob/master/pytorchtools.py
+Usage: https://github.com/Bjarten/early-stopping-pytorch/blob/master/MNIST_Early_Stopping_example.ipynb
+ 
+Another source: https://github.com/jeffheaton/app_deep_learning/blob/main/t81_558_class_03_4_early_stop.ipynb
+where best model restoring happens as a feature
+"""
+
+
+class EarlyStopping:
+    def __init__(self, patience=5, min_delta=0,
+                 logger=None,
+                 load_best_weights=True,
+                 control_files_limit=True):
+        """
+        Args:
+            patience (int):
+                How long to wait after last time validation loss improved.
+                Default: 7
+            min_delta (float):
+                Minimum change in the monitored quantity to qualify as an improvement.
+                Should be a positive number.
+                Default: 0
+            logger (logging.Logger):
+                Logger object to use for logging. If None, no logging is done.
+        """
+        self.patience = patience
+        self.min_delta = min_delta
+        self.best_loss = np.inf
+        self.counter = 0
+
+        self.load_best_weights = load_best_weights
+        self.file_limit_control = FilesLimitControl(logger=logger) if control_files_limit else None
+        self.logger = logger
+
+    def is_loss_decreased(self, val_loss):
+        return self.best_loss - val_loss >= self.min_delta
+
+    def __call__(self, val_loss, checkpoint_path, model):
+        if self.is_loss_decreased(val_loss):
+            self.log_info(f'Validation loss decreased ({self.best_loss:.6f} --> {val_loss:.6f}).  Saving model ...')
+            self.best_loss = val_loss
+            self.counter = 0
+
+            self.save_checkpoint(model, checkpoint_path)
+        else:
+            self.counter += 1
+            if self.counter >= self.patience:
+                self.log_info(f'EarlyStopping triggered after {self.counter} epochs.')
+                if self.load_best_weights:
+                    model.load_state_dict(torch.load(checkpoint_path))
+                return True
+        return False
+
+    def log_info(self, message):
+        if self.logger is not None:
+            self.logger.info(message)
+
+    def save_checkpoint(self, model, checkpoint_path):
+        """Saves model when validation loss decrease."""
+        torch.save(model.state_dict(), checkpoint_path)
+        self.log_info(f'Model saved to {checkpoint_path}')
+        if self.file_limit_control is not None:
+            self.file_limit_control(checkpoint_path)

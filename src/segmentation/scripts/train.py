@@ -1,29 +1,28 @@
-from tqdm import tqdm
+import argparse
 import os
 import time
-import numpy as np
-import torch
-import argparse
 
-from src.segmentation.utils import (
-    val_loop, load_pretrain_model, FilesLimitControl, sec2min,
-    configure_logging
-)
+import torch
+from tqdm import tqdm
+
+from src.segmentation.config import Config
 from src.segmentation.dataset import get_data_loader
+from src.segmentation.losses import FbBceLoss
+from src.segmentation.metrics import get_iou, get_f1_score, AverageMeter, IOUMetric
+from src.segmentation.models import LinkResNet
 from src.segmentation.transforms import (
     get_train_transforms, get_image_transforms, get_mask_transforms
 )
-from src.segmentation.config import Config
-from src.segmentation.metrics import get_iou, get_f1_score, AverageMeter, IOUMetric
-from src.segmentation.losses import FbBceLoss
-from src.segmentation.models import LinkResNet
-
+from src.segmentation.utils import (
+    val_loop, load_pretrain_model, sec2min,
+    configure_logging, EarlyStopping
+)
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def train_loop(
-    data_loader, model, criterion, optimizer, epoch, class_names, logger
+        data_loader, model, criterion, optimizer, epoch, class_names, logger
 ):
     loss_avg = AverageMeter()
     iou_avg = AverageMeter()
@@ -117,23 +116,27 @@ def main(args):
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer=optimizer, mode='min', factor=0.6, patience=50)
 
-    weight_limit_control = FilesLimitControl(logger=logger)
-    best_loss = np.inf
-    val_loss = val_loop(
-        val_loader, model, criterion, DEVICE, class_names, logger)
+    def get_model_save_path(_epoch, _val_loss):
+        return os.path.join(
+            config.get('save_dir'),
+            f'{model.__class__.__name__}-{_epoch}-{_val_loss:.4f}.ckpt'
+        )
+
+    early_stopping = EarlyStopping(load_best_weights=False)
+    val_loss = val_loop(val_loader, model, criterion, DEVICE, class_names, logger)
+    model_save_path = get_model_save_path(0, val_loss)
+    early_stopping(val_loss, model_save_path, model)
+
     for epoch in range(config.get('num_epochs')):
-        train_loss = train_loop(train_loader, model, criterion, optimizer,
-                                epoch, class_names, logger)
+        train_loss = train_loop(
+            train_loader, model, criterion, optimizer, epoch, class_names, logger)
         val_loss = val_loop(
             val_loader, model, criterion, DEVICE, class_names, logger)
         scheduler.step(train_loss)
-        if val_loss < best_loss:
-            best_loss = val_loss
-            model_save_path = os.path.join(
-                config.get('save_dir'), f'model-{epoch}-{val_loss:.4f}.ckpt')
-            torch.save(model.state_dict(), model_save_path)
-            logger.info(f'Model weights saved {model_save_path}')
-            weight_limit_control(model_save_path)
+
+        model_save_path = get_model_save_path(epoch, val_loss)
+        if early_stopping(val_loss, model_save_path, model):
+            break
 
 
 if __name__ == '__main__':
@@ -141,6 +144,4 @@ if __name__ == '__main__':
     parser.add_argument('--config_path', type=str,
                         default='/workdir/scripts/segm_config.json',
                         help='Path to config.json.')
-    args = parser.parse_args()
-
-    main(args)
+    main(parser.parse_args())
