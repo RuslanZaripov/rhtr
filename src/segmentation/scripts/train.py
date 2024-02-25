@@ -35,6 +35,7 @@ def train_loop(
     tqdm_data_loader = tqdm(data_loader, total=len(data_loader), leave=False)
     for images, targets in tqdm_data_loader:
         model.zero_grad()
+
         images = images.to(DEVICE)
         targets = targets.to(DEVICE)
         batch_size = len(images)
@@ -42,7 +43,6 @@ def train_loop(
 
         loss = criterion(preds, targets)
         loss_avg.update(loss.item(), batch_size)
-
         iou_avg.update(get_iou(preds, targets), batch_size)
         f1_score_avg.update(get_f1_score(preds, targets), batch_size)
         for cls_name in class_names:
@@ -50,9 +50,9 @@ def train_loop(
 
         loss.backward()
         optimizer.step()
+
     loop_time = sec2min(time.time() - strat_time)
-    for param_group in optimizer.param_groups:
-        lr = param_group['lr']
+    lr = optimizer.param_groups[0]['lr']
     cls2iou_log = ''.join([f' IOU {cls_name}: {iou_fun.avg():.4f}'
                            for cls_name, iou_fun in cls2iou.items()])
     logger.info(f'Train: epoch {epoch}, {loss_avg}, {iou_avg}, {cls2iou_log}, {f1_score_avg}, '
