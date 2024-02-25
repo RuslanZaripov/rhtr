@@ -13,6 +13,10 @@ from src.segmentation.predictor import predict
 
 def configure_logging(log_path=None):
     logger = logging.getLogger(__name__)
+
+    if len(logger.handlers) > 0:
+        return logger
+
     logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
         fmt='%(asctime)s - %(levelname)s - %(message)s',
@@ -79,9 +83,7 @@ class FilesLimitControl:
     def __init__(self, logger=None, max_weights_to_save=2):
         self.saved_weights_paths = []
         self.max_weights_to_save = max_weights_to_save
-        self.logger = logger
-        if logger is None:
-            self.logger = configure_logging()
+        self.logger = logger if logger is not None else configure_logging()
 
     def __call__(self, save_path):
         self.saved_weights_paths.append(save_path)
