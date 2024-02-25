@@ -21,7 +21,6 @@ def numbers2coords(list_of_numbers):
 
 def get_shrink_mask(polygons, image_h, image_w, shrink_ratio):
     """To create shrinked masks target."""
-    print(f"{shrink_ratio=}")
     shrink_mask_maker = MakeShrinkMask(image_h, image_w, shrink_ratio)
     for polygon in polygons:
         shrink_mask_maker.add_polygon_to_mask(polygon)
