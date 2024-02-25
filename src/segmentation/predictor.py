@@ -15,7 +15,7 @@ def predict(images, model, device, targets=None):
         images (torch.Tensor): Batch with tensor images.
         model (ocr.src.models.CRNN): OCR model.
         device (torch.device): Torch device.
-        targets (torch.Tensor): Batch with tensor masks. By default is None.
+        targets (torch.Tensor): Batch with tensor masks. By default, is None.
     """
     model.eval()
     images = images.to(device)
@@ -25,6 +25,7 @@ def predict(images, model, device, targets=None):
     if targets is not None:
         targets = targets.to(device)
         return output, targets
+
     return output
 
 

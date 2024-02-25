@@ -77,7 +77,7 @@ class IOUMetric:
         self.threshold = threshold
         self.avg_meter = AverageMeter('IOU', ':6.2f')
 
-    def __call__(self, preds, targets):
+    def update(self, preds, targets):
         preds_cls = preds[:, self.class_index]
         targets_cls = targets[:, self.class_index]
         iou = get_iou(preds_cls, targets_cls)

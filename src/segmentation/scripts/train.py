@@ -30,6 +30,7 @@ def train_loop(
                for cls_idx, cls_name in enumerate(class_names)}
     f1_score_avg = AverageMeter('F1 score', ':6.2f')
     strat_time = time.time()
+
     model.train()
     tqdm_data_loader = tqdm(data_loader, total=len(data_loader), leave=False)
     for images, targets in tqdm_data_loader:
@@ -45,7 +46,7 @@ def train_loop(
         iou_avg.update(get_iou(preds, targets), batch_size)
         f1_score_avg.update(get_f1_score(preds, targets), batch_size)
         for cls_name in class_names:
-            cls2iou[cls_name](preds, targets)
+            cls2iou[cls_name].update(preds, targets)
 
         loss.backward()
         optimizer.step()

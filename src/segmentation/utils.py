@@ -38,11 +38,12 @@ def configure_logging(log_path=None):
 
 def val_loop(data_loader, model, criterion, device, class_names, logger):
     loss_avg = AverageMeter('Loss', ':.4e')
-    iou_avg = AverageMeter('IOU', ':6.2f')
-    cls2iou = {cls_name: IOUMetric(cls_idx)
-               for cls_idx, cls_name in enumerate(class_names)}
+    iou = AverageMeter('IOU', ':6.2f')
+    cls2iou = {class_name: IOUMetric(class_idx)
+               for class_idx, class_name in enumerate(class_names)}
     f1_score_avg = AverageMeter('F1 score', ':6.2f')
     strat_time = time.time()
+
     tqdm_data_loader = tqdm(data_loader, total=len(data_loader), leave=False)
     for images, targets in tqdm_data_loader:
         preds, targets = predict(images, model, device, targets)
@@ -50,15 +51,16 @@ def val_loop(data_loader, model, criterion, device, class_names, logger):
 
         loss = criterion(preds, targets)
         loss_avg.update(loss.item(), batch_size)
-
-        iou_avg.update(get_iou(preds, targets), batch_size)
+        iou.update(get_iou(preds, targets), batch_size)
         f1_score_avg.update(get_f1_score(preds, targets), batch_size)
         for cls_name in class_names:
-            cls2iou[cls_name](preds, targets)
+            cls2iou[cls_name].update(preds, targets)
+
     loop_time = sec2min(time.time() - strat_time)
-    cls2iou_log = ''.join([f' IOU {cls_name}: {iou_fun.avg():.4f}'
-                           for cls_name, iou_fun in cls2iou.items()])
-    logger.info(f'Validation: {loss_avg}, {iou_avg}, {cls2iou_log}, {f1_score_avg}, loop_time: {loop_time}')
+    cls2iou_log = ', '.join([f'{class_name}: {iou}'
+                            for class_name, iou in cls2iou.items()])
+    logger.info(f'Validation: {loss_avg}, {iou}, {cls2iou_log}, {f1_score_avg}, loop_time: {loop_time}')
+
     return loss_avg.avg
 
 
