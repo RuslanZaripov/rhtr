@@ -24,11 +24,11 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 def train_loop(
         data_loader, model, criterion, optimizer, epoch, class_names, logger
 ):
-    loss_avg = AverageMeter()
-    iou_avg = AverageMeter()
+    loss_avg = AverageMeter('Loss', ':.4e')
+    iou_avg = AverageMeter('IOU', ':6.2f')
     cls2iou = {cls_name: IOUMetric(cls_idx)
                for cls_idx, cls_name in enumerate(class_names)}
-    f1_score_avg = AverageMeter()
+    f1_score_avg = AverageMeter('F1 score', ':6.2f')
     strat_time = time.time()
     model.train()
     tqdm_data_loader = tqdm(data_loader, total=len(data_loader), leave=False)
@@ -54,13 +54,8 @@ def train_loop(
         lr = param_group['lr']
     cls2iou_log = ''.join([f' IOU {cls_name}: {iou_fun.avg():.4f}'
                            for cls_name, iou_fun in cls2iou.items()])
-    logger.info(f'Epoch {epoch}, '
-                f'Loss: {loss_avg.avg:.5f}, '
-                f'IOU avg: {iou_avg.avg:.4f}, '
-                f'{cls2iou_log}, '
-                f'F1 avg: {f1_score_avg.avg:.4f}, '
-                f'LR: {lr:.7f}, '
-                f'loop_time: {loop_time}')
+    logger.info(f'Train: epoch {epoch}, {loss_avg}, {iou_avg}, {cls2iou_log}, {f1_score_avg}, '
+                f'LR: {lr:.7f}, loop_time: {loop_time}')
     return loss_avg.avg
 
 

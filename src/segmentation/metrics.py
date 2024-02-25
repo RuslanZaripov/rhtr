@@ -26,7 +26,7 @@ def f1_score(y_pred, y_true, eps=1e-6):
 
     precision = tp / (tp + fp + eps)
     recall = tp / (tp + fn + eps)
-    f1 = 2 * precision*recall / (precision + recall + eps)
+    f1 = 2 * precision * recall / (precision + recall + eps)
     return f1
 
 
@@ -40,27 +40,42 @@ def get_f1_score(preds, targets, threshold=0.5):
     return np.mean(f1)
 
 
-class AverageMeter:
-    """Computes and stores the average and current value"""
-    def __init__(self):
+class AverageMeter(object):
+    """Computes and stores the average and current value."""
+    name: str
+    fmt: str
+    val: float
+    avg: float
+    sum: float
+    count: int
+
+    def __init__(self, name, fmt=':f'):
+        self.name = name
+        self.fmt = fmt
         self.reset()
 
     def reset(self):
+        self.val = 0
         self.avg = 0
         self.sum = 0
         self.count = 0
 
     def update(self, val, n=1):
+        self.val = val
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
+
+    def __str__(self):
+        fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
+        return fmtstr.format(**self.__dict__)
 
 
 class IOUMetric:
     def __init__(self, class_index, threshold=0.5):
         self.class_index = class_index
         self.threshold = threshold
-        self.avg_meter = AverageMeter()
+        self.avg_meter = AverageMeter('IOU', ':6.2f')
 
     def __call__(self, preds, targets):
         preds_cls = preds[:, self.class_index]
