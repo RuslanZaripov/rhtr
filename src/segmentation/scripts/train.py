@@ -122,7 +122,7 @@ def main(args):
             f'{model.__class__.__name__}-{_epoch}-{_val_loss:.4f}.ckpt'
         )
 
-    early_stopping = EarlyStopping(load_best_weights=False)
+    early_stopping = EarlyStopping(logger=logger, load_best_weights=False)
     val_loss = val_loop(val_loader, model, criterion, DEVICE, class_names, logger)
     model_save_path = get_model_save_path(0, val_loss)
     early_stopping(val_loss, model_save_path, model)

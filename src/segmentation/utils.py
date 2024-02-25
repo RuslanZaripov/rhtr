@@ -147,8 +147,8 @@ class EarlyStopping:
         self.counter = 0
 
         self.load_best_weights = load_best_weights
-        self.file_limit_control = FilesLimitControl(logger=logger) if control_files_limit else None
-        self.logger = logger
+        self.logger = logger if logger is not None else configure_logging()
+        self.file_limit_control = FilesLimitControl(logger=self.logger) if control_files_limit else None
 
     def is_loss_decreased(self, val_loss):
         return self.best_loss - val_loss >= self.min_delta
