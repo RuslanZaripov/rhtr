@@ -85,3 +85,6 @@ class IOUMetric:
 
     def avg(self):
         return self.avg_meter.avg
+
+    def __str__(self):
+        return str(self.avg_meter)
