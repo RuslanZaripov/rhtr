@@ -103,7 +103,9 @@ def main(args):
     log_path = os.path.join(config.get('save_dir'), 'output.log')
     logger = configure_logging(log_path)
 
-    writer = SummaryWriter(log_dir=config.get('tensorboard_log_dir'))
+    tensorboard_log_dir = config.get('tensorboard_log_dir')
+    os.makedirs(tensorboard_log_dir, exist_ok=True)
+    writer = SummaryWriter(log_dir=tensorboard_log_dir)
 
     train_loader, val_loader = get_loaders(config)
 
