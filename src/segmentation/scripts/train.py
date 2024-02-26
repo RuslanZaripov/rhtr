@@ -132,7 +132,7 @@ def main(args):
         )
 
     early_stopping = EarlyStopping(logger=logger, load_best_weights=False)
-    val_loss = val_loop(val_loader, model, criterion, DEVICE, class_names, logger)
+    val_loss = val_loop(val_loader, model, criterion, DEVICE, class_names, logger, writer)
     model_save_path = get_model_save_path(0, val_loss)
     early_stopping(val_loss, model_save_path, model)
 
