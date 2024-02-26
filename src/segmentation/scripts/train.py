@@ -5,6 +5,7 @@ import time
 import torch
 from tensorboardX import SummaryWriter
 from tqdm import tqdm
+from datetime import datetime
 
 from src.segmentation.config import Config
 from src.segmentation.dataset import get_data_loader
@@ -98,12 +99,15 @@ def get_loaders(config):
 def main(args):
     config = Config(args.config_path)
 
-    os.makedirs(config.get('save_dir'), exist_ok=True)
+    save_folder_name = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    save_dir = os.path.join(config.get('save_dir'), save_folder_name)
 
-    log_path = os.path.join(config.get('save_dir'), 'output.log')
+    os.makedirs(save_dir, exist_ok=True)
+
+    log_path = os.path.join(save_dir, 'output.log')
     logger = configure_logging(log_path)
 
-    tensorboard_log_dir = config.get('tensorboard_log_dir')
+    tensorboard_log_dir = os.path.join(config.get('tensorboard_log_dir'), save_folder_name)
     os.makedirs(tensorboard_log_dir, exist_ok=True)
     writer = SummaryWriter(log_dir=tensorboard_log_dir)
 
@@ -127,7 +131,7 @@ def main(args):
 
     def get_model_save_path(_epoch, _val_loss):
         return os.path.join(
-            config.get('save_dir'),
+            save_dir,
             f'{model.__class__.__name__}-{_epoch}-{_val_loss:.4f}.ckpt'
         )
 
