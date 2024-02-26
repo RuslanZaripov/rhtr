@@ -3,6 +3,7 @@ import os
 import time
 
 import torch
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from src.segmentation.config import Config
@@ -22,7 +23,7 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def train_loop(
-        data_loader, model, criterion, optimizer, epoch, class_names, logger
+        data_loader, model, criterion, optimizer, epoch, class_names, logger, writer
 ):
     loss_avg = AverageMeter('Loss', ':.4e')
     iou_avg = AverageMeter('IOU', ':6.2f')
@@ -57,6 +58,12 @@ def train_loop(
                            for cls_name, iou_fun in cls2iou.items()])
     logger.info(f'Train: epoch {epoch}, {loss_avg}, {iou_avg}, {cls2iou_log}, {f1_score_avg}, '
                 f'LR: {lr:.7f}, loop_time: {loop_time}')
+
+    writer.add_scalar('Loss/train', loss_avg.avg, epoch)
+    writer.add_scalar('IOU/train', iou_avg.avg, epoch)
+    writer.add_scalar('F1_score/train', f1_score_avg.avg, epoch)
+    writer.add_scalar('LR/train', lr, epoch)
+
     return loss_avg.avg
 
 
@@ -90,9 +97,13 @@ def get_loaders(config):
 
 def main(args):
     config = Config(args.config_path)
+
     os.makedirs(config.get('save_dir'), exist_ok=True)
-    log_path = os.path.join(config.get('save_dir'), "output.log")
+
+    log_path = os.path.join(config.get('save_dir'), 'output.log')
     logger = configure_logging(log_path)
+
+    writer = SummaryWriter(log_dir=config.get('tensorboard_log_dir'))
 
     train_loader, val_loader = get_loaders(config)
 
@@ -125,9 +136,10 @@ def main(args):
 
     for epoch in range(config.get('num_epochs')):
         train_loss = train_loop(
-            train_loader, model, criterion, optimizer, epoch, class_names, logger)
+            train_loader, model, criterion, optimizer, epoch, class_names, logger, writer)
         val_loss = val_loop(
-            val_loader, model, criterion, DEVICE, class_names, logger)
+            val_loader, model, criterion, DEVICE, class_names, logger, writer)
+
         scheduler.step(train_loss)
 
         model_save_path = get_model_save_path(epoch, val_loss)
