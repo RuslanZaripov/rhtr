@@ -198,15 +198,15 @@ class SEGMDataset(Dataset):
         return self.dataset_len
 
     def __getitem__(self, idx):
-        if self.set_name is not None:
-            with h5py.File('data/data_images_compressed.h5', 'r') as f:
-                image = f[f'{self.set_name}_images'][idx, ...].astype(np.uint8)
-                target = f[f'{self.set_name}_targets'][idx, ...]
-        else:
-            img_path = self.img_paths[idx]
-            target_path = self.target_paths[idx]
-            image = cv2.imread(img_path)
-            target = np.load(target_path)
+        # if self.set_name is not None:
+        #     with h5py.File('data/data_images_compressed.h5', 'r') as f:
+        #         image = f[f'{self.set_name}_images'][idx, ...].astype(np.uint8)
+        #         target = f[f'{self.set_name}_targets'][idx, ...]
+        # else:
+        img_path = self.img_paths[idx]
+        target_path = self.target_paths[idx]
+        image = cv2.imread(img_path)
+        target = np.load(target_path)
 
         if self.train_transforms is not None:
             image, target = self.train_transforms(image, target)
