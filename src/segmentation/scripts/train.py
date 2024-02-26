@@ -148,6 +148,8 @@ def main(args):
         if early_stopping(val_loss, model_save_path, model):
             break
 
+    writer.close()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
