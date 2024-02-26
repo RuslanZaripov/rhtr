@@ -140,7 +140,7 @@ def main(args):
         train_loss = train_loop(
             train_loader, model, criterion, optimizer, epoch, class_names, logger, writer)
         val_loss = val_loop(
-            val_loader, model, criterion, DEVICE, class_names, logger, writer)
+            val_loader, model, criterion, DEVICE, epoch, class_names, logger, writer)
 
         scheduler.step(train_loss)
 
