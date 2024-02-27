@@ -48,9 +48,15 @@
     "train": {
         "datasets": [
             {
-                "json_path": "/kaggle/working/magazine/annotations_train.json",
-                "image_root": "/kaggle/working/magazine/images/",
-                "processed_data_path": "/kaggle/working/magazine/annotations_train.csv",
+                "json_path": "/kaggle/working/school_notebooks_RU/annotations_train.json",
+                "image_root": "/kaggle/working/school_notebooks_RU/images/",
+                "processed_data_path": "/kaggle/working/school_notebooks_RU/annotations_train.csv",
+                "prob": 0.5
+            },
+            {
+                "json_path": "/kaggle/working/school_notebooks_EN/annotations_train.json",
+                "image_root": "/kaggle/working/school_notebooks_EN/images/",
+                "processed_data_path": "/kaggle/working/school_notebooks_EN/annotations_train.csv",
                 "prob": 0.5
             }
         ],
@@ -60,9 +66,15 @@
     "val": {
         "datasets": [
             {
-                "json_path": "/kaggle/working/magazine/annotations_val.json",
-                "image_root": "/kaggle/working/magazine/images/",
-                "processed_data_path": "/kaggle/working/magazine/annotations_val.csv",
+                "json_path": "/kaggle/working/school_notebooks_RU/annotations_val.json",
+                "image_root": "/kaggle/working/school_notebooks_RU/images/",
+                "processed_data_path": "/kaggle/working/school_notebooks_RU/annotations_val.csv",
+                "prob": 0.5
+            },
+            {
+                "json_path": "/kaggle/working/school_notebooks_EN/annotations_val.json",
+                "image_root": "/kaggle/working/school_notebooks_EN/images/",
+                "processed_data_path": "/kaggle/working/school_notebooks_EN/annotations_val.csv",
                 "prob": 0.5
             }
         ],
@@ -72,9 +84,15 @@
     "test": {
         "datasets": [
             {
-                "json_path": "/kaggle/working/magazine/annotations_test.json",
-                "image_root": "/kaggle/working/magazine/images/",
-                "processed_data_path": "/kaggle/working/magazine/annotations_test.csv",
+                "json_path": "/kaggle/working/school_notebooks_RU/annotations_test.json",
+                "image_root": "/kaggle/working/school_notebooks_RU/images/",
+                "processed_data_path": "/kaggle/working/school_notebooks_RU/annotations_test.csv",
+                "prob": 0.5
+            },
+            {
+                "json_path": "/kaggle/working/school_notebooks_EN/annotations_test.json",
+                "image_root": "/kaggle/working/school_notebooks_EN/images/",
+                "processed_data_path": "/kaggle/working/school_notebooks_EN/annotations_test.csv",
                 "prob": 0.5
             }
         ],
