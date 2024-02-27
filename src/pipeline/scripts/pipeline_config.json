@@ -2,7 +2,7 @@
     "pipeline": {
         "WordSegmentation": {
             "model_path": "models/segmentation/model-29-0.1751.ckpt",
-            "config_path": "src/segmentation/scripts/segm_config.json"
+            "config_path": "src/segmentation/configs/segm_config_schoolbooks.json"
         },
         "RestoreImageAngle": {
             "restoring_class_names": ["text_line"]

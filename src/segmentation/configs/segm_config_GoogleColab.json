@@ -1,0 +1,84 @@
+{
+    "save_dir": "/content/experiments/segm",
+    "tensorboard_log_dir": "tensorboard/log",
+    "num_epochs": 1500,
+    "pretrain_path": "",
+    "image": {
+        "width": 896,
+        "height": 896
+    },
+    "classes": {
+        "class_name_1": {
+            "annotation_classes": ["pupil_text"],
+            "polygon2mask": {
+                "ShrinkMaskMaker": {
+                    "shrink_ratio": 0.75
+                }
+            },
+            "postprocess": {
+                "threshold": 0.8,
+                "min_area": 10
+            }
+        },
+        "class_name_2": {
+            "annotation_classes": ["pupil_comment", "teacher_comment"],
+            "polygon2mask": {
+                "ShrinkMaskMaker": {
+                    "shrink_ratio": 0.75
+                }
+            },
+            "postprocess": {
+                "threshold": 0.8,
+                "min_area": 10
+            }
+        },
+        "class_name_3": {
+            "annotation_classes": ["text_line"],
+            "polygon2mask": {
+                "PolylineToMask": {
+                    "thickness": 10
+                }
+            },
+            "postprocess": {
+                "threshold": 0.8,
+                "min_area": 0
+            }
+        }
+    },
+    "train": {
+        "datasets": [
+            {
+                "json_path": "/content/magazine/annotations_train.json",
+                "image_root": "/content/magazine/images/",
+                "processed_data_path": "/content/magazine/annotations_train.csv",
+                "prob": 0.5
+            }
+        ],
+        "epoch_size": 125,
+        "batch_size": 4
+    },
+    "val": {
+        "datasets": [
+            {
+                "json_path": "/content/magazine/annotations_val.json",
+                "image_root": "/content/magazine/images/",
+                "processed_data_path": "/content/magazine/annotations_val.csv",
+                "prob": 0.5
+            }
+        ],
+        "epoch_size": null,
+        "batch_size": 10
+    },
+    "test": {
+        "datasets": [
+            {
+                "json_path": "/content/magazine/annotations_test.json",
+                "image_root": "/content/magazine/images/",
+                "processed_data_path": "/content/magazine/annotations_test.csv",
+                "prob": 0.5
+            }
+        ],
+        "epoch_size": null,
+        "batch_size": 10
+    }
+}
