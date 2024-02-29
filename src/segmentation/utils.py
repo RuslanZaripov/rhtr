@@ -36,7 +36,7 @@ def configure_logging(log_path=None):
     return logger
 
 
-def val_loop(data_loader, model, criterion, device, epoch, class_names, logger, writer):
+def val_loop(data_loader, model, criterion, device, epoch, class_names, logger, writer=None):
     loss_avg = AverageMeter('Loss', ':.4e')
     iou = AverageMeter('IOU', ':6.2f')
     cls2iou = {class_name: IOUMetric(class_idx)
@@ -61,10 +61,11 @@ def val_loop(data_loader, model, criterion, device, epoch, class_names, logger, 
                              for class_name, iou in cls2iou.items()])
     logger.info(f'Validation: {loss_avg}, {iou}, {cls2iou_log}, {f1_score_avg}, loop_time: {loop_time}')
 
-    writer.add_scalar('Loss/val', loss_avg.avg, epoch)
-    writer.add_scalar('IOU/val', iou.avg, epoch)
-    writer.add_scalar('F1_score/val', f1_score_avg.avg, epoch)
-    writer.add_scalars('IOU/val_cls', {cls_name: iou_fun.avg() for cls_name, iou_fun in cls2iou.items()}, epoch)
+    if writer is not None:
+        writer.add_scalar('Loss/val', loss_avg.avg, epoch)
+        writer.add_scalar('IOU/val', iou.avg, epoch)
+        writer.add_scalar('F1_score/val', f1_score_avg.avg, epoch)
+        writer.add_scalars('IOU/val_cls', {cls_name: iou_fun.avg() for cls_name, iou_fun in cls2iou.items()}, epoch)
 
     return loss_avg.avg
 

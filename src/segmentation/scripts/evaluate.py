@@ -35,12 +35,12 @@ def main(args):
 
     class_names = config.get_classes().keys()
     model = LinkResNet(output_channels=len(class_names))
-    model.load_state_dict(torch.load(args.model_path))
+    model.load_state_dict(torch.load(args.model_path, map_location=DEVICE))
     model.to(DEVICE)
 
     criterion = FbBceLoss()
 
-    val_loop(test_loader, model, criterion, DEVICE, class_names, logger)
+    val_loop(test_loader, model, criterion, DEVICE, 0, class_names, logger)
 
 
 if __name__ == '__main__':
@@ -50,6 +50,4 @@ if __name__ == '__main__':
                         help='Path to config.json.')
     parser.add_argument('--model_path', type=str,
                         help='Path to model weights.')
-    args = parser.parse_args()
-
-    main(args)
+    main(parser.parse_args())
