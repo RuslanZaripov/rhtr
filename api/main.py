@@ -17,7 +17,7 @@ rhtr_api.add_middleware(
 
 
 @rhtr_api.post("/uploadfile/")
-async def create_upload_files(file: UploadFile):
+def create_upload_files(file: UploadFile):
     def bbox2xywh(bbox):
         x1, y1, x2, y2 = bbox
         return {"x": x1, "y": y1, "width": x2 - x1, "height": y2 - y1}
@@ -30,9 +30,18 @@ async def create_upload_files(file: UploadFile):
     )
     rotated_image, data = predictor.predict(image)
 
+    filtered_words = filter(
+        lambda prediction: prediction['class_name'] in predictor.get_prediction_classes(),
+        data['predictions']
+    )
+
+    # print(f"{data['predictions'][0].keys()=}")
+    # sorted_predictions = sorted(filtered_words, key=lambda prediction: prediction['word_idx'])
+    # print(f"{len(sorted_predictions)=}")
+
     result = {"filenames": file.filename,
-              "words": [{"word": prediction['text'], "rect": bbox2xywh(prediction['bbox'])}
-                        for prediction in data['predictions']]
+              "words": [{"word": prediction['text'], "rect": bbox2xywh(prediction['rotated_bbox'])}
+                        for prediction in filtered_words]
               }
     print(f"{result=}")
     return result

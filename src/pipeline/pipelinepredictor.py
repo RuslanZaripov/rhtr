@@ -5,6 +5,7 @@ import src.pipeline.config
 import src.pipeline.segmpostproc
 import src.pipeline.anglerestorer
 import src.segmentation.predictor
+import src.pipeline.linefinder
 
 
 class WordSegmentation:
@@ -29,12 +30,16 @@ class OpticalCharacterRecognition:
             self,
             model_path: str,
             config_path: str,
+            ocr_classes: list[str],
             pipeline_config: src.pipeline.config.Config,
     ):
+        self.ocr_classes = ocr_classes
         self.recognizer = ocr.OCRTorchModel(model_path, config_path)
 
     def __call__(self, image: np.ndarray, data: dict) -> tuple[np.ndarray, dict]:
-        crops = [prediction['crop'] for prediction in data['predictions']]
+        crops = [prediction['crop']
+                 for prediction in data['predictions']
+                 if prediction['class_name'] in self.ocr_classes]
         text_predictions = self.recognizer(crops)
         for prediction, text in zip(data['predictions'], text_predictions):
             prediction['text'] = text
@@ -47,6 +52,7 @@ class PipelinePredictor:
         'OpticalCharacterRecognition': OpticalCharacterRecognition,
         'ContourPostprocessors': src.pipeline.segmpostproc.ContourPostprocessors,
         'RestoreImageAngle': src.pipeline.anglerestorer.ImageAngleRestorer,
+        'LineFinder': src.pipeline.linefinder.LineFinder
     }
 
     def __init__(self, config_path: str):
@@ -61,3 +67,6 @@ class PipelinePredictor:
         for step in self.steps:
             image, data = step(image, data)
         return image, data
+
+    def get_prediction_classes(self):
+        return self.config['pipeline']['OpticalCharacterRecognition']['ocr_classes']

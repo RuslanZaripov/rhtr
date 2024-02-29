@@ -1,8 +1,8 @@
 {
     "pipeline": {
         "WordSegmentation": {
-            "model_path": "models/segmentation/model-29-0.1751.ckpt",
-            "config_path": "src/segmentation/configs/segm_config_schoolbooks.json"
+            "model_path": "models/segmentation/1/experiments/segm/2024-02-27_13-18-43/LinkResNet-25-0.2092.ckpt",
+            "config_path": "models/segmentation/1/segm_config.json"
         },
         "RestoreImageAngle": {
             "restoring_class_names": ["text_line"]
@@ -23,12 +23,17 @@
                     },
                     "CropByBbox": {}
                 },
-                "text_line": {}
+                "class_name_3": {}
             }
         },
         "OpticalCharacterRecognition": {
             "model_path": "models/ocr/CRNN-82-0.4128.ckpt",
-            "config_path": "src/ocr/scripts/htr_config.yaml"
+            "config_path": "src/ocr/scripts/htr_config.yaml",
+            "ocr_classes": ["class_name_1", "class_name_2"]
+        },
+        "LineFinder": {
+            "line_classes": ["class_name_3"],
+            "text_classes": ["class_name_1", "class_name_2"]
         }
     }
 }
