@@ -3,9 +3,9 @@ import torch
 from pathlib import Path
 import argparse
 
-from segm.predictor import SegmTorchModel
-from segm.config import Config
-from segm.utils import configure_logging
+from src.segmentation.predictor import SegmTorchModel
+from src.segmentation.config import Config
+from src.segmentation.utils import configure_logging
 
 
 def main(args):
@@ -44,5 +44,4 @@ if __name__ == '__main__':
                         help='Path to config.json.')
     parser.add_argument('--model_path', type=str,
                         help='Path to torch model weights.')
-    args = parser.parse_args()
-    main(args)
+    main(parser.parse_args())
