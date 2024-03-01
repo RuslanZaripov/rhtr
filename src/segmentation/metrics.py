@@ -40,6 +40,15 @@ def get_f1_score(preds, targets, threshold=0.5):
     return np.mean(f1)
 
 
+def dice_loss(pred, m):
+    import torch
+    eps = 1e-6
+    intersection = torch.sum(pred * m)
+    union = torch.sum(pred * m) + eps
+    loss = 1 - 2.0 * intersection / union
+    return loss
+
+
 class AverageMeter(object):
     """Computes and stores the average and current value."""
     name: str

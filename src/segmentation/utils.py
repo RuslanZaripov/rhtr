@@ -7,9 +7,8 @@ import numpy as np
 
 from tqdm import tqdm
 
-from src.segmentation.metrics import get_iou, get_f1_score, AverageMeter, IOUMetric
+from src.segmentation.metrics import get_iou, get_f1_score, AverageMeter, IOUMetric, dice_loss
 from src.segmentation.predictor import predict
-from src.segmentation.scripts.train import dice_loss
 
 
 def configure_logging(log_path=None):

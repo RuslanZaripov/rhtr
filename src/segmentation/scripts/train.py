@@ -10,7 +10,7 @@ from datetime import datetime
 from src.segmentation.config import Config
 from src.segmentation.dataset import get_data_loader
 from src.segmentation.losses import FbBceLoss
-from src.segmentation.metrics import get_iou, get_f1_score, AverageMeter, IOUMetric
+from src.segmentation.metrics import get_iou, get_f1_score, AverageMeter, IOUMetric, dice_loss
 from src.segmentation.models import LinkResNet
 from src.segmentation.transforms import (
     get_train_transforms, get_image_transforms, get_mask_transforms
@@ -21,14 +21,6 @@ from src.segmentation.utils import (
 )
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-
-def dice_loss(pred, m):
-    eps = 1e-6
-    intersection = torch.sum(pred * m)
-    union = torch.sum(pred * m) + eps
-    loss = 1 - 2.0 * intersection / union
-    return loss
 
 
 def train_loop(
