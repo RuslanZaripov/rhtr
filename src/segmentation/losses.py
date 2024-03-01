@@ -42,13 +42,22 @@ class FbBceLoss(nn.Module):
         self.bce_loss = nn.BCELoss()
 
     def forward(self, output, target):
-        if self.fb_weight > 0:
-            fb = self.fb_loss(output, target) * self.fb_weight
-        else:
-            fb = 0
+        # output has shape (B, C, H, W)
+        # target has shape (B, C - 1, H, W)
 
-        if self.bce_weight > 0:
-            bce = self.bce_loss(output, target) * self.bce_weight
-        else:
-            bce = 0
-        return fb + bce
+        # extract last channel from output for each batch and concatenate
+        thresh_binary = output[:, -1:, :, :]
+        output = output[:, :-1, :, :]
+
+        fb = self.fb_loss(output, target) * self.fb_weight
+        bce = self.bce_loss(output, target) * self.bce_weight
+        dice = dice_loss(thresh_binary, target[:, 0, :, :])
+        return fb + bce + dice
+
+
+def dice_loss(pred, m):
+    eps = 1e-6
+    intersection = torch.sum(pred * m)
+    union = torch.sum(pred * m) + eps
+    loss = 1 - 2.0 * intersection / union
+    return loss

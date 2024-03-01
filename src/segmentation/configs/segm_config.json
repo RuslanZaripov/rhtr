@@ -1,6 +1,6 @@
 {
-    "save_dir": "data/experiments/segmentation/1",
-    "tensorboard_log_dir": "tensorboard/log/1",
+    "save_dir": "data/experiments/segmentation/2",
+    "tensorboard_log_dir": "data/tensorboard/log/2",
     "num_epochs": 1500,
     "pretrain_path": "",
     "image": {
@@ -8,21 +8,49 @@
         "height": 896
     },
     "classes": {
-        "page": {
-            "annotation_classes": ["page"],
+        "handwritten_shrinked_mask": {
+            "annotation_classes": ["pupil_text", "pupil_comment", "teacher_comment"],
             "polygon2mask": {
                 "ShrinkMaskMaker": {
+                    "shrink_ratio": 0.8
+                }
+            },
+            "postprocess": {
+                "threshold": 0.3,
+                "min_area": 10
+            }
+        },
+        "handwritten_border": {
+            "annotation_classes": ["pupil_text", "pupil_comment", "teacher_comment"],
+            "polygon2mask": {
+                "BorderMaskMaker": {
                     "shrink_ratio": 0.5
                 }
+            },
+            "postprocess": {
+                "threshold": 0.8,
+                "min_area": 10
+            }
+        },
+        "text_line": {
+            "annotation_classes": ["text_line"],
+            "polygon2mask": {
+                "PolylineToMask": {
+                    "thickness": 5
+                }
+            },
+            "postprocess": {
+                "threshold": 0.8,
+                "min_area": 1
             }
         }
     },
     "train": {
         "datasets": [
             {
-                "json_path": "data/raw/magazine/annotations_train.json",
-                "image_root": "data/raw/magazine/images/",
-                "processed_data_path": "data/raw/magazine/annotations_train.csv",
+                "json_path": "data/raw/school_notebooks_RU/annotations_train.json",
+                "image_root": "data/raw/school_notebooks_RU/images/",
+                "processed_data_path": "data/raw/school_notebooks_RU/annotations_train.csv",
                 "prob": 0.5
             }
         ],
@@ -32,9 +60,9 @@
     "val": {
         "datasets": [
             {
-                "json_path": "data/raw/magazine/annotations_val.json",
-                "image_root": "data/raw/magazine/images/",
-                "processed_data_path": "data/raw/magazine/annotations_val.csv",
+                "json_path": "data/raw/school_notebooks_RU/annotations_val.json",
+                "image_root": "data/raw/school_notebooks_RU/images/",
+                "processed_data_path": "data/raw/school_notebooks_RU/annotations_val.csv",
                 "prob": 0.5
             }
         ],
@@ -44,9 +72,9 @@
     "test": {
         "datasets": [
             {
-                "json_path": "data/raw/magazine/annotations_test.json",
-                "image_root": "data/raw/magazine/images/",
-                "processed_data_path": "data/raw/magazine/annotations_test.csv",
+                "json_path": "data/raw/school_notebooks_RU/annotations_test.json",
+                "image_root": "data/raw/school_notebooks_RU/images/",
+                "processed_data_path": "data/raw/school_notebooks_RU/annotations_test.csv",
                 "prob": 0.5
             }
         ],

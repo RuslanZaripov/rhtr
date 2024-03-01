@@ -1,6 +1,7 @@
 """
 all credits to @nizhib
 """
+import torch
 import torch.nn as nn
 from torchvision.models.resnet import \
     resnet18,\
@@ -56,11 +57,13 @@ class DecoderBlock(nn.Module):
 
 
 class LinkResNet(nn.Module):
-    def __init__(self, input_channels=3, output_channels=1, dropout2d_p=0.5,
+    def __init__(self, k=50, input_channels=3, output_channels=1, dropout2d_p=0.5,
                  pretrained=True, encoder='resnet50'):
         assert input_channels > 0
         assert encoder in ENCODERS
         super().__init__()
+
+        self.k = k
 
         if encoder in ['resnet18', 'resnet34']:
             filters = [64, 128, 256, 512]
@@ -100,6 +103,9 @@ class LinkResNet(nn.Module):
         self.finalconv3 = nn.Conv2d(32, output_channels, 2, padding=1)
         self.sigmoid = nn.Sigmoid()
 
+    def step_function(self, x, y):
+        return torch.reciprocal(1 + torch.exp(-self.k * (x - y)))
+
     # noinspection PyCallingNonCallable
     def forward(self, x):
         # Encoder
@@ -126,4 +132,16 @@ class LinkResNet(nn.Module):
         f3 = self.finalconv2(f2)
         f4 = self.finalrelu2(f3)
         f5 = self.finalconv3(f4)
-        return self.sigmoid(f5)
+
+        result = self.sigmoid(f5)
+
+        # # result shape is (B, C, H, W)
+        probability_map = result[:, 0, :, :]
+        threshold_map = result[:, 1, :, :]
+
+        thresh_binary = self.step_function(probability_map, threshold_map)  # (B, 1, H, W)
+
+        # stack threshold binary for each batch as last  (B, C, H, W) -> (B, C + 1, H, W)
+        thresh_binary = thresh_binary.unsqueeze(1)
+        result = torch.cat([result, thresh_binary], dim=1)
+        return result
