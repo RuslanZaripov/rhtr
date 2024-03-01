@@ -40,11 +40,11 @@ def get_f1_score(preds, targets, threshold=0.5):
     return np.mean(f1)
 
 
-def dice_loss(pred, m):
+def dice_loss(pred, gt):
     import torch
     eps = 1e-6
-    intersection = torch.sum(pred * m)
-    union = torch.sum(pred * m) + eps
+    intersection = torch.sum(pred * gt)
+    union = torch.sum(pred) + torch.sum(gt) + eps
     loss = 1 - 2.0 * intersection / union
     return loss
 
