@@ -23,6 +23,14 @@ from src.segmentation.utils import (
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
+def dice_loss(pred, m):
+    eps = 1e-6
+    intersection = torch.sum(pred * m)
+    union = torch.sum(pred * m) + eps
+    loss = 1 - 2.0 * intersection / union
+    return loss
+
+
 def train_loop(
         data_loader, model, criterion, optimizer, epoch, class_names, logger, writer
 ):
@@ -43,7 +51,10 @@ def train_loop(
         batch_size = len(images)
         preds = model(images)
 
-        loss = criterion(preds, targets)
+        thresh_binary = preds[:, -1:, :, :]
+        preds = preds[:, :-1, :, :]
+        loss = criterion(preds, targets) + dice_loss(thresh_binary, targets[:, 0, :, :])
+
         loss_avg.update(loss.item(), batch_size)
         iou_avg.update(get_iou(preds, targets), batch_size)
         f1_score_avg.update(get_f1_score(preds, targets), batch_size)
