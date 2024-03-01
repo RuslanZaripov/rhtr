@@ -203,8 +203,8 @@ class SEGMDataset(Dataset):
         #         image = f[f'{self.set_name}_images'][idx, ...].astype(np.uint8)
         #         target = f[f'{self.set_name}_targets'][idx, ...]
         # else:
-        img_path = self.img_paths[idx]
-        target_path = self.target_paths[idx]
+        img_path = self.img_paths[idx].replace('\\\\', '/')
+        target_path = self.target_paths[idx].replace('\\\\', '/')
         image = cv2.imread(img_path)
         target = np.load(target_path)
 
