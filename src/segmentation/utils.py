@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 from src.segmentation.metrics import get_iou, get_f1_score, AverageMeter, IOUMetric
 from src.segmentation.predictor import predict
+from src.segmentation.scripts.train import dice_loss
 
 
 def configure_logging(log_path=None):
@@ -49,7 +50,10 @@ def val_loop(data_loader, model, criterion, device, epoch, class_names, logger, 
         preds, targets = predict(images, model, device, targets)
         batch_size = len(images)
 
-        loss = criterion(preds, targets)
+        thresh_binary = preds[:, -1:, :, :]
+        preds = preds[:, :-1, :, :]
+        loss = criterion(preds, targets) + dice_loss(thresh_binary, targets[:, 0, :, :])
+
         loss_avg.update(loss.item(), batch_size)
         iou.update(get_iou(preds, targets), batch_size)
         f1_score_avg.update(get_f1_score(preds, targets), batch_size)
