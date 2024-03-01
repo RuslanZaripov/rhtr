@@ -135,14 +135,16 @@ def get_preprocessed_sample(config: src.segmentation.config.Config, image_id, da
 def preprocess_data(config, json_path, image_root, save_data_path):
     """Create and save targets for Unet training."""
 
-    target_folder = Path('targets')
-    image_processed_folder = Path('images_processed')
-    # create folders
-    save_root = Path(save_data_path).parent
-    target_dir = save_root / target_folder
-    os.makedirs(str(target_dir), exist_ok=True)
-    image_processed_dir = save_root / image_processed_folder
-    os.makedirs(str(image_processed_dir), exist_ok=True)
+    target_folder = 'targets'
+    image_processed_folder = 'images_processed'
+
+    save_root = os.path.dirname(save_data_path)
+
+    target_dir = os.path.join(save_root, target_folder)
+    os.makedirs(target_dir, exist_ok=True)
+
+    image_processed_dir = os.path.join(save_root, image_processed_folder)
+    os.makedirs(image_processed_dir, exist_ok=True)
 
     with open(json_path, 'r') as f:
         data = json.load(f)
@@ -150,15 +152,18 @@ def preprocess_data(config, json_path, image_root, save_data_path):
     image_paths = []
     target_paths = []
     for data_img in tqdm(data['images']):
-        img_name = data_img['file_name']
+        img_name = str(data_img['file_name'])
         image_id = data_img['id']
+
         image = cv2.imread(os.path.join(image_root, img_name))
         image, target = get_preprocessed_sample(config, image_id, data, image)
-        # save image and target
-        cv2.imwrite(str(image_processed_dir / img_name), image)
-        image_paths.append(image_processed_folder / img_name)
-        np.save(target_dir / Path(img_name).with_suffix('.npy'), target)
-        target_paths.append(target_folder / Path(img_name).with_suffix('.npy'))
+
+        cv2.imwrite(os.path.join(image_processed_dir, img_name), image)
+        image_paths.append(os.path.join(image_processed_folder, img_name))
+
+        target_name = f'{img_name.split(".")[0]}.npy'
+        np.save(os.path.join(target_dir, target_name), target)
+        target_paths.append(os.path.join(target_folder, target_name))
 
     pd_data = pd.DataFrame(
         list(zip(image_paths, target_paths)),
@@ -203,5 +208,4 @@ if __name__ == '__main__':
     parser.add_argument('--config_path', type=str,
                         default='scripts/segm_config.json',
                         help='Path to config.json.')
-    args = parser.parse_args()
-    main(args)
+    main(parser.parse_args())
