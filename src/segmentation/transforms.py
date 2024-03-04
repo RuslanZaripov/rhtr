@@ -120,7 +120,7 @@ class RandomTransposeAndFlip:
     def __call__(self, img, mask):
         if random.random() < 0.5:
             img = self.transpose(img)
-            mask = self.transpose(mask)
+            mask = np.transpose(mask, (1, 0, 2))
         if random.random() < 0.5:
             img = self.vertical_flip(img)
             mask = self.vertical_flip(mask)
