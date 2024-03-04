@@ -137,7 +137,8 @@ class LinkResNet(nn.Module):
 
         # # result shape is (B, C, H, W)
         probability_map = result[:, 0, :, :]
-        threshold_map = result[:, 1, :, :]
+        # Change threshold map index
+        threshold_map = result[:, -2, :, :]
 
         thresh_binary = self.step_function(probability_map, threshold_map)  # (B, 1, H, W)
 
