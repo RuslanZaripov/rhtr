@@ -23,7 +23,7 @@
         "class_name_2": {
             "annotation_classes": ["pupil_text", "pupil_comment", "teacher_comment"],
             "polygon2mask": {
-                "MakeBorderMask": {
+                "BorderMaskMaker": {
                     "shrink_ratio": 0.5
                 }
             },
