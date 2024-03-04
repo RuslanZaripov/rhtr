@@ -207,7 +207,7 @@ class SEGMDataset(Dataset):
         img_path = self.img_paths[idx].replace('\\', '/')
         target_path = self.target_paths[idx].replace('\\', '/')
         image = cv2.imread(img_path)
-        target = np.load(target_path).astype(np.float32)
+        target = np.load(target_path).astype(np.uint8)
 
         if self.train_transforms is not None:
             image, target = self.train_transforms(image, target)
