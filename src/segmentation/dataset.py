@@ -8,6 +8,7 @@ import pyclipper
 import numpy as np
 from shapely.geometry import Polygon
 import h5py
+from scipy import ndimage
 
 
 def get_full_img_path(img_root_path, csv_path):
@@ -224,6 +225,49 @@ def is_valid_polygon(polygon):
         polygon (shapely.geometry.Polygon): The polygon.
     """
     return polygon.length >= 1 and polygon.area > 0
+
+
+class DistanceMaskMaker:
+    def __init__(self, image_h, image_w):
+        self.mask = np.zeros((image_h, image_w), dtype=np.uint8)
+        self.distance_mask = np.zeros((image_h, image_w), dtype=np.uint8)
+        self.inds = np.indices((image_h, image_w))
+
+    def add_polygon_to_mask(self, polygon):
+        cv2.fillPoly(self.mask, [polygon], [1])
+
+        bbox = cv2.boundingRect(polygon)
+        x, y, w, h = bbox
+
+        offset = 5
+        x = max(0, x - offset)
+        y = max(0, y - offset)
+        w = min(w + 2 * offset, self.distance_mask.shape[1] - x)
+        h = min(h + 2 * offset, self.distance_mask.shape[0] - y)
+
+        try:
+            y_h = y + h
+            x_w = x + w
+            edt, inds = ndimage.distance_transform_edt(
+                self.mask[y:y_h, x:x_w],
+                return_indices=True,
+            )
+            self.distance_mask[y:y_h, x:x_w] = edt
+
+            inds[0] += x
+            inds[1] += y
+            self.inds[:, y:y_h, x:x_w] = inds
+        except Exception as err:
+            print(err)
+
+    def get_distance_mask(self):
+        return self.distance_mask
+
+    def get_inidicies(self):
+        return self.inds
+
+    def get_mask(self):
+        return self.mask
 
 
 class MakeShrinkMask:

@@ -1,15 +1,16 @@
 import numpy as np
+import pandas as pd
 import json
 import cv2
 import os
-from tqdm import tqdm
-from pathlib import Path
-import pandas as pd
 import argparse
+
+from scipy import ndimage
+from tqdm import tqdm
 
 import src.segmentation.config
 from src.segmentation.config import Config
-from src.segmentation.dataset import MakeShrinkMask, MakeBorderMask
+from src.segmentation.dataset import MakeShrinkMask, MakeBorderMask, DistanceMaskMaker
 
 
 def numbers2coords(list_of_numbers):
@@ -25,6 +26,68 @@ def get_shrink_mask(polygons, image_h, image_w, shrink_ratio):
     for polygon in polygons:
         shrink_mask_maker.add_polygon_to_mask(polygon)
     return shrink_mask_maker.get_shrink_mask()
+
+
+def distance_transform_fast(mask, return_indices=False):
+    min_x, max_x = np.argwhere(mask > 0)[:, 0].min(), np.argwhere(mask > 0)[:, 0].max()
+    min_y, max_y = np.argwhere(mask > 0)[:, 1].min(), np.argwhere(mask > 0)[:, 1].max()
+
+    empty = np.zeros_like(mask)
+    try:
+        if not return_indices:
+            empty[min_x:max_x, min_y:max_y] = ndimage.distance_transform_edt(mask[min_x:max_x, min_y:max_y])
+            return empty
+        else:
+            min_x = max(min_x - 5, 0)
+            min_y = max(min_y - 5, 0)
+            max_x = min(max_x + 5, mask.shape[0])
+            max_y = min(max_y + 5, mask.shape[1])
+
+            indices = np.zeros_like(np.vstack([[mask] * 2]))
+
+            empty[min_x:max_x, min_y:max_y], indices[:, min_x:max_x, min_y:max_y] = ndimage.distance_transform_edt(
+                mask[min_x:max_x, min_y:max_y],
+                return_indices=True
+            )
+
+            indices[0] += min_x
+            indices[1] += min_y
+
+            return empty, indices
+    except Exception as err:
+        print(err)
+
+
+def mask2vectors(mask):
+    distances, indices = distance_transform_fast(mask, return_indices=True)
+    # avoid division by zero for blank areas  when normalizing
+    grid_indices = np.indices((mask.shape[0], mask.shape[1]))
+    distances[distances == 0] = 1
+    indices_grid_indices = indices - grid_indices
+    distances_ = (indices_grid_indices * (mask > 0)) / np.asarray([distances, distances])
+    return distances_
+
+
+def get_distance_mask(polygons, image_h, image_w):
+    distance_mask_maker = DistanceMaskMaker(image_h, image_w)
+    for polygon in polygons:
+        distance_mask_maker.add_polygon_to_mask(polygon)
+    return distance_mask_maker.get_distance_mask()
+
+
+def get_vector_mask(polygons, image_h, image_w):
+    distance_mask_maker = DistanceMaskMaker(image_h, image_w)
+    for polygon in polygons:
+        distance_mask_maker.add_polygon_to_mask(polygon)
+
+    distances = distance_mask_maker.get_distance_mask()
+    indices = distance_mask_maker.get_inidicies()
+    grid_indices = np.indices((image_h, image_w))
+    distances[distances == 0] = 1
+
+    indices_grid_indices = indices - grid_indices
+    distances_ = (indices_grid_indices * (distance_mask_maker.get_mask() > 0)) / np.asarray([distances, distances])
+    return distances_
 
 
 def polyline2polygon(polyline, thickness=10):
@@ -125,7 +188,7 @@ def get_preprocessed_sample(config: src.segmentation.config.Config, image_id, da
         for process_name, process_args in params['polygon2mask'].items():
             mask = PREPROCESS_FUNC[process_name](
                 mask, new_img_h, new_img_w, **process_args)
-        class_masks.append(mask)
+        class_masks.extend(mask.reshape(-1, mask.shape[-2], mask.shape[-1]))
 
     # stack class masks to target
     target = np.stack(class_masks, -1)
@@ -200,7 +263,9 @@ def main(args):
 PREPROCESS_FUNC = {
     "ShrinkMaskMaker": get_shrink_mask,
     "PolylineToMask": get_polyline_mask,
-    "BorderMaskMaker": get_border_mask
+    "BorderMaskMaker": get_border_mask,
+    "DistanceMaskMaker": get_distance_mask,
+    "VectorMaskMaker": get_vector_mask,
 }
 
 if __name__ == '__main__':
