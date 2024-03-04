@@ -43,9 +43,10 @@ def train_loop(
         batch_size = len(images)
         preds = model(images)
 
-        thresh_binary = preds[:, -1:, :, :]
+        thresh_binary_mask = preds[:, -1:, :, :]
         preds = preds[:, :-1, :, :]
-        loss = criterion(preds, targets) + dice_loss(thresh_binary, targets[:, 0, :, :])
+        gt_mask = targets[:, 0, :, :]
+        loss = criterion(preds, targets) + dice_loss(thresh_binary_mask, gt_mask)
 
         loss_avg.update(loss.item(), batch_size)
         iou_avg.update(get_iou(preds, targets), batch_size)
