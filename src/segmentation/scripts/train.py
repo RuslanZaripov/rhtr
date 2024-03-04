@@ -9,7 +9,7 @@ from datetime import datetime
 
 from src.segmentation.config import Config
 from src.segmentation.dataset import get_data_loader
-from src.segmentation.losses import FbBceLoss
+from src.segmentation.losses import FbBceLoss, FbBceWithLogitsLoss
 from src.segmentation.metrics import get_iou, get_f1_score, AverageMeter, IOUMetric, dice_loss
 from src.segmentation.models import LinkResNet
 from src.segmentation.transforms import (
@@ -126,7 +126,7 @@ def main(args):
         logger.info(f"Load pretrained model {config.get('pretrain_path')}")
     model.to(DEVICE)
 
-    criterion = FbBceLoss()
+    criterion = FbBceWithLogitsLoss()
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.001,
                                   weight_decay=0.01)

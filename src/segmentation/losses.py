@@ -45,3 +45,18 @@ class FbBceLoss(nn.Module):
         fb = self.fb_loss(output, target) * self.fb_weight
         bce = self.bce_loss(output, target) * self.bce_weight
         return fb + bce
+
+
+class FbBceWithLogitsLoss(nn.Module):
+    def __init__(self, fb_weight=0.5, fb_beta=1, bcell_weight=0.5):
+        super().__init__()
+        self.fb_weight = fb_weight
+        self.bcell_weight = bcell_weight
+
+        self.fb_loss = FBLoss(beta=fb_beta)
+        self.bcell_loss = nn.BCEWithLogitsLoss()
+
+    def forward(self, output, target):
+        fb = self.fb_loss(output, target) * self.fb_weight
+        bce = self.bcell_loss(output, target) * self.bcell_weight
+        return fb + bce
