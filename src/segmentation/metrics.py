@@ -42,6 +42,7 @@ def get_f1_score(preds, targets, threshold=0.5):
 
 def dice_loss(pred, gt):
     import torch
+    pred = pred.squeeze(1)  # (B, 1, H, W) -> (B, H, W)
     eps = 1e-6
     intersection = torch.sum(pred * gt)
     union = torch.sum(pred) + torch.sum(gt) + eps
