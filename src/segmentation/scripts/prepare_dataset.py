@@ -57,7 +57,7 @@ def get_polyline_mask(polygons, image_h, image_w, thickness=10):
         polygon = polyline2polygon(polygon, thickness)
         pts = np.array(np.array(polygon), dtype=np.int32)
         if len(pts) > 0:
-            cv2.fillPoly(mask, [pts], 1)
+            cv2.fillPoly(mask, [pts], [1])
         else:
             print('Empty line')
     return mask

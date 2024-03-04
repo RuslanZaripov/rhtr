@@ -261,7 +261,7 @@ class MakeShrinkMask:
         shrinked_bboxes = pco.Execute(-distance)
         for shrinked_bbox in shrinked_bboxes:
             shrinked_bbox = np.array(shrinked_bbox)
-            cv2.fillPoly(self.shrink_mask, [shrinked_bbox], 1)
+            cv2.fillPoly(self.shrink_mask, [shrinked_bbox], [1])
 
     def get_shrink_mask(self):
         return self.shrink_mask
