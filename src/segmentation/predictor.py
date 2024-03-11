@@ -31,7 +31,8 @@ def predict(images, model, device, targets=None):
 
 def contour2bbox(contour):
     """Get bbox from contour."""
-    x, y, w, h = cv2.boundingRect(contour)
+    assert len(contour) > 0, "Contour is empty."
+    x, y, w, h = cv2.boundingRect(contour.astype(np.float32))
     return x, y, x + w, y + h
 
 
