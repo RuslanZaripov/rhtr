@@ -1,0 +1,18 @@
+save_dir: 'data/experiments'
+dataset_root: 'data/raw/SHIFT_Lab_CFT'
+images_dir_name: 'images' # Name of the directory containing the images
+h5_filename: 'images.h5' # Name of the HDF5 file located in dataset_root
+image:
+  height: 32
+  width: 128
+optimizer:
+  lr: 0.0001
+dataloader:
+  num_workers: 0
+train:
+  csv_filename: 'train.csv'
+  epochs: 100
+  batch_size: 64
+val:
+  csv_filename: 'val.csv'
+  batch_size: 64
