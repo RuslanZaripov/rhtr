@@ -27,7 +27,8 @@ def add_polygon_center(pred_img):
     for idx, prediction in enumerate(pred_img['predictions']):
         contour = prediction['polygon']
         # compute the center of the contour
-        array = np.array([contour])
+        array = np.array(contour)
+        assert len(array.shape) == 2, "not a 2d points array"
         M = cv2.moments(array)
         if M["m00"] == 0:
             cX = int(np.mean(array[..., 0]))
