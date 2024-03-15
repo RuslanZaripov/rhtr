@@ -72,8 +72,8 @@ class DefaultBatchPreprocessor:
         """
         Apply transforms to the batch of images.
         """
-        print(f"{len(images)=}")
-        print(f"{images[0].shape=}")
+        # print(f"{len(images)=}")
+        # print(f"{images[0].shape=}")
         return torch.stack([self.transforms(image) for image in images], 0)
 
 
