@@ -104,12 +104,13 @@ def get_pred_text_for_gt_polygon(gt_polygon, pred_data):
 def get_pred_data(img_name, pred_jsons_dir, pred_class_names):
     pred_json_name = os.path.splitext(img_name)[0] + '.json'
     pred_json_path = os.path.join(pred_jsons_dir, pred_json_name)
+    if not os.path.exists(pred_json_path):
+        return None
     with open(pred_json_path, 'r') as f:
         all_pred_data = json.load(f)
 
     # get prediction of only certain classes
-    pred_data = {}
-    pred_data["predictions"] = []
+    pred_data = {"predictions": []}
     for prediction in all_pred_data["predictions"]:
         if prediction['class_name'] in pred_class_names:
             pred_data["predictions"].append(prediction)
@@ -181,6 +182,7 @@ def evaluate_pipeline(
             get_data_from_image(data, image_id, ann_class_names)
 
         pred_data = get_pred_data(img_name, pred_jsons_dir, pred_class_names)
+        if pred_data is None: continue
 
         # find predicted text for each ground true polygon
         pred_texts = []
@@ -199,6 +201,8 @@ def evaluate_pipeline(
         acc_avg.update(get_accuracy(texts_from_image, pred_texts), num_samples)
         wer_avg.update(wer(texts_from_image, pred_texts), num_samples)
         cer_avg.update(cer(texts_from_image, pred_texts), num_samples)
+
+        print(f"{acc_avg.avg=} {wer_avg.avg=} {cer_avg.avg=}")
 
     print(f'acc: {acc_avg.avg:.4f}')
     print(f'wer: {wer_avg.avg:.4f}')
