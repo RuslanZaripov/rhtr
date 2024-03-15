@@ -162,9 +162,9 @@ def energy_baseline(msk=None,
     # plt.imshow(msk_ths)
     # plt.show()
 
-    import seaborn as sns
-    sns.heatmap(energy, cmap='rainbow', cbar=True, xticklabels=False, yticklabels=False)
-    plt.savefig(f'data/processed/energy.png')
+    # import seaborn as sns
+    # sns.heatmap(energy, cmap='rainbow', cbar=True, xticklabels=False, yticklabels=False)
+    # plt.savefig(f'data/processed/energy.png')
 
     energy_ths = (np.copy(energy) > 255 * 0.6) * 1
 
