@@ -105,6 +105,22 @@ def get_preds_watershed(images, preds, cls2params, config, cuda_torch_input=True
             contours.append(contour)
             # mask = cv2.drawContours(mask, [contour.astype(np.int64)], -1, (255, 0, 0), 2)
 
+        areas = [cv2.contourArea(contour.astype(np.int32)) for contour in contours]
+        mean = np.mean(areas)
+        contours = [contour for contour, area in zip(contours, areas) if area > mean * 0.15]
+
+        # q3, q1 = np.percentile(areas, [75, 25])
+        # iqr = q3 - q1
+        # print(f"{iqr=} {q3=} {q1=}")
+        # lower, upper = q1 - 1.5 * iqr, q3 + 1.5 * iqr
+        # print(f"{lower=}, {upper=}")
+
+        # contours = [contour for contour, area in zip(contours, areas) if lower <= area <= upper]
+
+        # plt.hist(areas, bins=1000, color='skyblue', edgecolor='black')
+        # plt.xlabel('Value')
+        # plt.ylabel('Frequency')
+        # plt.title('Histogram of List of Values')
         # plt.imshow(mask)
         # plt.show()
 
@@ -158,17 +174,20 @@ def energy_baseline(msk=None,
                     thin_labels=False):
     msk_ths = (np.copy(msk) > 0.6) * 1
 
-    # print(f"msk {np.min(msk)}-{np.max(msk)}")
     # plt.imshow(msk_ths)
-    # plt.show()
+    # plt.savefig(f'data/processed/msk_ths.png')
+    # plt.clf()
 
     # import seaborn as sns
     # sns.heatmap(energy, cmap='rainbow', cbar=True, xticklabels=False, yticklabels=False)
     # plt.savefig(f'data/processed/energy.png')
+    # plt.clf()
 
-    energy_ths = (np.copy(energy) > 255 * 0.6) * 1
+    energy_ths = (np.copy(energy) > 255 * 0.65) * 1
 
-    # print(f"energy_ths: {np.min(energy_ths)}-{np.max(energy_ths)}")
+    # plt.imshow(energy_ths)
+    # plt.savefig(f'data/processed/energy_ths.png')
+    # plt.clf()
 
     distance = ndi.distance_transform_edt(msk_ths)
 
@@ -195,7 +214,7 @@ def energy_baseline(msk=None,
 
     labels = watershed(-distance,
                        markers,
-                       mask=msk_ths)
+                       mask=energy_ths)
 
     # plt.imshow(labels, cmap=plt.cm.nipy_spectral)
     # plt.savefig('data/processed/labels.png')
