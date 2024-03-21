@@ -123,7 +123,7 @@ def get_pred_data(img_name, pred_jsons_dir, pred_class_names):
 
 
 def evaluate_pipeline(
-        annotation_json_path, ann_class_names, pred_class_names, pred_jsons_dir,
+        annotation_json_paths, ann_class_names, pred_class_names, pred_jsons_dir,
 ):
     """
     Calculate the evaluation metric for the pipeline by matching the
@@ -147,7 +147,7 @@ def evaluate_pipeline(
                     ...
                 ]
             }
-        annotation_json_path (str): Path to the segmentation annotation json
+        annotation_json_paths (str): Path to the segmentation annotation json
             in COCO format. The json should have the following format:
             {
                 "images": [
@@ -168,50 +168,51 @@ def evaluate_pipeline(
                 ]
             }
     """
-    with open(annotation_json_path, 'r') as f:
-        data = json.load(f)
-
     acc_avg = AverageMeter()
     wer_avg = AverageMeter()
     cer_avg = AverageMeter()
-    for data_img in tqdm(data['images']):
-        img_name = data_img['file_name']
-        image_id = data_img['id']
+    for idx, annotation_json_path in enumerate(annotation_json_paths):
+        with open(annotation_json_path, 'r') as f:
+            data = json.load(f)
 
-        texts_from_image, polygons_from_image = \
-            get_data_from_image(data, image_id, ann_class_names)
+        for data_img in tqdm(data['images']):
+            img_name = data_img['file_name']
+            image_id = data_img['id']
 
-        pred_data = get_pred_data(img_name, pred_jsons_dir, pred_class_names)
-        if pred_data is None: continue
+            texts_from_image, polygons_from_image = \
+                get_data_from_image(data, image_id, ann_class_names)
 
-        # find predicted text for each ground true polygon
-        pred_texts = []
-        for gt_polygon in polygons_from_image:
-            pred_texts.append(
-                get_pred_text_for_gt_polygon(gt_polygon, pred_data)
-            )
+            pred_data = get_pred_data(img_name, pred_jsons_dir, pred_class_names)
+            if pred_data is None: continue
 
-        # to penalty false positive prediction, that were not matched with gt
-        for prediction in pred_data['predictions']:
-            if prediction.get('matched') is None:
-                pred_texts.append(prediction['text'])
-                texts_from_image.append('')
+            # find predicted text for each ground true polygon
+            pred_texts = []
+            for gt_polygon in polygons_from_image:
+                pred_texts.append(
+                    get_pred_text_for_gt_polygon(gt_polygon, pred_data)
+                )
 
-        num_samples = len(pred_texts)
-        acc_avg.update(get_accuracy(texts_from_image, pred_texts), num_samples)
-        wer_avg.update(wer(texts_from_image, pred_texts), num_samples)
-        cer_avg.update(cer(texts_from_image, pred_texts), num_samples)
+            # to penalty false positive prediction, that were not matched with gt
+            for prediction in pred_data['predictions']:
+                if prediction.get('matched') is None:
+                    pred_texts.append(prediction['text'])
+                    texts_from_image.append('')
 
-        print(f"{acc_avg.avg=} {wer_avg.avg=} {cer_avg.avg=}")
+            num_samples = len(pred_texts)
+            acc_avg.update(get_accuracy(texts_from_image, pred_texts), num_samples)
+            wer_avg.update(wer(texts_from_image, pred_texts), num_samples)
+            cer_avg.update(cer(texts_from_image, pred_texts), num_samples)
 
-    print(f'acc: {acc_avg.avg:.4f}')
-    print(f'wer: {wer_avg.avg:.4f}')
-    print(f'cer: {cer_avg.avg:.4f}')
+            print(f"{acc_avg.avg=} {wer_avg.avg=} {cer_avg.avg=}")
+
+        print(f'acc: {acc_avg.avg:.4f}')
+        print(f'wer: {wer_avg.avg:.4f}')
+        print(f'cer: {cer_avg.avg:.4f}')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--annotation_json_path', type=str, required=True,
+    parser.add_argument('--annotation_json_path', nargs='+', type=str, required=True,
                         help='Path to json with segmentation dataset'
                              'annotation in COCO format.')
     parser.add_argument('--ann_class_names', nargs='+', type=str, required=True,
