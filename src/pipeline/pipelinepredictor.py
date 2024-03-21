@@ -8,6 +8,9 @@ import src.segmentation.predictor
 import src.pipeline.linefinder
 
 
+from src.pipeline.word_recognition_utils import TrOCR
+
+
 class WordSegmentation:
     def __init__(
             self,
@@ -34,7 +37,8 @@ class OpticalCharacterRecognition:
             pipeline_config: src.pipeline.config.Config,
     ):
         self.ocr_classes = ocr_classes
-        self.recognizer = ocr.OCRTorchModel(model_path, config_path)
+        # self.recognizer = ocr.OCRTorchModel(model_path, config_path)
+        self.recognizer = TrOCR()
 
     def __call__(self, image: np.ndarray, data: dict) -> tuple[np.ndarray, dict]:
         crops = [prediction['crop']
