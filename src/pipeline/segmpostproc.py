@@ -7,7 +7,7 @@ class BboxFromContour:
     @staticmethod
     def contour2bbox(contour):
         """Get bbox from contour."""
-        x, y, w, h = cv2.boundingRect(contour)
+        x, y, w, h = cv2.boundingRect(contour.astype(np.float32))
         return x, y, x + w, y + h
 
     def __call__(self, image, crop, bbox, contour):
@@ -79,7 +79,7 @@ class ContourPostprocessors:
 
                 bbox = None
                 crop = None
-                contour = prediction['rotated_polygon']
+                contour = prediction['rotated_polygon'] if 'rotated_polygon' in prediction else prediction['polygon']
 
                 for f in postprocessors:
                     crop, bbox, contour = f(image, crop, bbox, contour)
