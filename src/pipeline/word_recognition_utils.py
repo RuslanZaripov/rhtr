@@ -1,5 +1,16 @@
 from transformers import TrOCRProcessor, VisionEncoderDecoderModel
+from itertools import chain
 import torch
+
+
+def batch(iterable, batch_size):
+    """Yield successive batches of given size from the iterable."""
+    for i in range(0, len(iterable), batch_size):
+        yield iterable[i:i + batch_size]
+
+
+def flatten(matrix):
+    return list(chain.from_iterable(matrix))
 
 
 class TrOCR:
@@ -11,7 +22,7 @@ class TrOCR:
         self.trained_model = VisionEncoderDecoderModel.from_pretrained("raxtemur/trocr-base-ru").to(self.device)
 
     def __call__(self, images):
-        return self.ocr(images)
+        return flatten([self.ocr(b) for b in batch(images, 100)])
 
     def ocr(self, images):
         # We can directly perform OCR on cropped images.
