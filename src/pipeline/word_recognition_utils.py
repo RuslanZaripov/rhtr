@@ -16,6 +16,8 @@ class TrOCR:
     def ocr(self, images):
         # We can directly perform OCR on cropped images.
         pixel_values = self.processor(images, return_tensors='pt').pixel_values.to(self.device)
-        generated_ids = self.trained_model.generate(pixel_values)
+        self.trained_model.eval()
+        with torch.no_grad(), torch.inference_mode():
+            generated_ids = self.trained_model.generate(pixel_values)
         generated_text = self.processor.batch_decode(generated_ids, skip_special_tokens=True)
         return generated_text
