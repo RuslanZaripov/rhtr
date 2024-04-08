@@ -11,6 +11,32 @@ import src.pipeline.linefinder
 from src.pipeline.word_recognition_utils import TrOCR
 
 
+def visualize(image, pred_img):
+    import cv2
+    import matplotlib.pyplot as plt
+
+    image_copy = image.copy()
+    for prediction in pred_img['predictions']:
+        if prediction["class_name"] != "handwritten_text_shrinked_mask1": continue
+        class2color = {  # BGR
+            "handwritten_text_shrinked_mask1": (0, 255, 0),  # green # text
+            "class_name_2": (0, 0, 255),  # red # comments
+            "class_name_3": (255, 0, 0),  # blue # text_line
+        }
+        polygon = [tuple(point) for point in prediction["polygon"]]
+        polygon_np = np.array(polygon, np.int32)
+        polygon_np = polygon_np.reshape((-1, 1, 2))
+        cv2.polylines(image_copy, [polygon_np],
+                      isClosed=True,
+                      color=class2color[prediction["class_name"]],
+                      thickness=3)
+
+    plt.figure(figsize=(10, 10))
+    plt.axis('off')
+    plt.imshow(image_copy)
+    plt.show()
+
+
 class WordSegmentation:
     def __init__(
             self,
@@ -25,6 +51,9 @@ class WordSegmentation:
 
     def __call__(self, image, pred_img):
         pred_img = self.segm_predictor([image])[0]
+
+        # visualize(image, pred_img)
+
         return image, pred_img
 
 
