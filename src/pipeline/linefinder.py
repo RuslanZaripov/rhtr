@@ -25,7 +25,7 @@ def add_polygon_center(pred_img):
         pred_img (dict): The dictionary with predictions.
     """
     for idx, prediction in enumerate(pred_img['predictions']):
-        contour = prediction['polygon']
+        contour = prediction['rotated_polygon'] if 'rotated_polygon' in prediction.keys() else prediction['polygon']
         # compute the center of the contour
         array = np.array(contour)
         assert len(array.shape) == 2, "not a 2d points array"
