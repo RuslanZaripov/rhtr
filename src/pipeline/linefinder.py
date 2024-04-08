@@ -352,6 +352,41 @@ def add_word_indexes(pred_img, word_class_names):
                         word_idx += 1
 
 
+def simple_ordering(pred_img):
+    centroids = [(idx, prediction['polygon_center'])
+                 for idx, prediction in enumerate(pred_img['predictions'])]
+    sort = sorted(centroids, key=lambda p: p[1][0] + (p[1][1] * 10))
+    for word_idx, polygon in enumerate(sort):
+        pred_img['predictions'][polygon[0]]['word_idx'] = word_idx
+
+
+def visualize_ordering(image, pred_img):
+    import matplotlib.pyplot as plt
+    import cv2
+
+    image_copy = image.copy()
+
+    for prediction in pred_img['predictions']:
+        polygon = [tuple(point)
+                   for point in prediction["rotated_polygon"]]
+        polygon_np = np.array(polygon, np.int32)
+        polygon_np = polygon_np.reshape((-1, 1, 2))
+        cv2.polylines(image_copy, [polygon_np],
+                      isClosed=True,
+                      color=(255, 0, 0),
+                      thickness=2)
+
+    plt.figure(figsize=(10, 10))
+    plt.axis('off')
+    plt.imshow(image_copy)
+
+    for prediction in pred_img['predictions']:
+        plt.scatter(prediction['polygon_center'][0], prediction['polygon_center'][1], color='red', marker='o')
+        plt.annotate(f"{prediction['word_idx']}", (prediction['polygon_center'][0], prediction['polygon_center'][1]))
+
+    plt.show()
+
+
 class LineFinder:
     """Heuristic methods to define indexes of rows, columns and pages for
     polygons on the image.
@@ -374,10 +409,16 @@ class LineFinder:
     def __call__(self, image, pred_img):
         _, img_w = image.shape[:2]
         add_polygon_center(pred_img)
-        add_page_idx_for_lines(
-            pred_img, self.line_classes, img_w, self.pages_clust_dist)
-        add_line_idx_for_lines(pred_img, self.line_classes)
-        add_line_idx_for_words(pred_img, self.line_classes, self.text_classes)
-        add_column_idx_for_words(pred_img, self.text_classes)
-        add_word_indexes(pred_img, self.text_classes)
+
+        simple_ordering(pred_img)
+
+        visualize_ordering(image, pred_img)
+
+        # add_page_idx_for_lines(
+        #     pred_img, self.line_classes, img_w, self.pages_clust_dist)
+        # add_line_idx_for_lines(pred_img, self.line_classes)
+        # add_line_idx_for_words(pred_img, self.line_classes, self.text_classes)
+        # add_column_idx_for_words(pred_img, self.text_classes)
+        # add_word_indexes(pred_img, self.text_classes)
+
         return image, pred_img
