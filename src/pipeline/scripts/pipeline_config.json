@@ -5,7 +5,7 @@
             "config_path": "models/segmentation/3/segm_config.json"
         },
         "RestoreImageAngle": {
-            "restoring_class_names": []
+            "restoring_class_names": ["handwritten_text_shrinked_mask1"]
         },
         "ContourPostprocessors": {
             "class2postprocessors": {
