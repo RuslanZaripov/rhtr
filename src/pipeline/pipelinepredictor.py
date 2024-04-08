@@ -8,6 +8,7 @@ import src.segmentation.predictor
 import src.pipeline.linefinder
 
 
+from src.pipeline.segmentor_utils import UNet
 from src.pipeline.word_recognition_utils import TrOCR
 
 
@@ -44,6 +45,7 @@ class WordSegmentation:
             config_path: str,
             pipeline_config: src.pipeline.config.Config,
     ):
+        # self.segm_predictor = UNet()
         self.segm_predictor = src.segmentation.predictor.SegmPredictor(
             model_path=model_path,
             config_path=config_path,
