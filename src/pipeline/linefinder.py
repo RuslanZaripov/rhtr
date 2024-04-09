@@ -382,7 +382,10 @@ def visualize_ordering(image, pred_img):
 
     for prediction in pred_img['predictions']:
         plt.scatter(prediction['polygon_center'][0], prediction['polygon_center'][1], color='red', marker='o')
-        plt.annotate(f"{prediction['word_idx']}", (prediction['polygon_center'][0], prediction['polygon_center'][1]))
+        plt.annotate(
+              f"{prediction['word_idx']}/{prediction['text']}",
+              (prediction['polygon_center'][0], prediction['polygon_center'][1]),
+              fontsize=7)
 
     plt.show()
 
