@@ -360,32 +360,35 @@ def simple_ordering(pred_img):
         pred_img['predictions'][polygon[0]]['word_idx'] = word_idx
 
 
-def visualize_ordering(image, pred_img):
+def visualize_ordering(image, pred_img, classes, idx_name):
     import matplotlib.pyplot as plt
     import cv2
 
     image_copy = image.copy()
 
     for prediction in pred_img['predictions']:
-        polygon = [tuple(point)
-                   for point in prediction["rotated_polygon"]]
-        polygon_np = np.array(polygon, np.int32)
-        polygon_np = polygon_np.reshape((-1, 1, 2))
-        cv2.polylines(image_copy, [polygon_np],
-                      isClosed=True,
-                      color=(255, 0, 0),
-                      thickness=2)
+        if prediction['class_name'] in classes:
+            polygon = [tuple(point)
+                       for point in prediction["rotated_polygon"]]
+            polygon_np = np.array(polygon, np.int32)
+            polygon_np = polygon_np.reshape((-1, 1, 2))
+            cv2.polylines(image_copy, [polygon_np],
+                          isClosed=True,
+                          color=(255, 0, 0),
+                          thickness=2)
 
     plt.figure(figsize=(10, 10))
     plt.axis('off')
     plt.imshow(image_copy)
 
     for prediction in pred_img['predictions']:
-        plt.scatter(prediction['polygon_center'][0], prediction['polygon_center'][1], color='red', marker='o')
-        plt.annotate(
-              f"{prediction['word_idx']}/{prediction['text']}",
-              (prediction['polygon_center'][0], prediction['polygon_center'][1]),
-              fontsize=7)
+        if prediction['class_name'] in classes:
+            plt.scatter(prediction['polygon_center'][0], prediction['polygon_center'][1], color='red', marker='o')
+            idx = str(prediction[idx_name]) if idx_name in prediction.keys() else ''
+            plt.annotate(
+                f"{idx}",
+                (prediction['polygon_center'][0], prediction['polygon_center'][1]),
+                fontsize=7)
 
     plt.show()
 
@@ -413,15 +416,17 @@ class LineFinder:
         _, img_w = image.shape[:2]
         add_polygon_center(pred_img)
 
-        simple_ordering(pred_img)
+        # simple_ordering(pred_img)
 
-        visualize_ordering(image, pred_img)
+        add_page_idx_for_lines(pred_img, self.line_classes, img_w, self.pages_clust_dist)
 
-        # add_page_idx_for_lines(
-        #     pred_img, self.line_classes, img_w, self.pages_clust_dist)
-        # add_line_idx_for_lines(pred_img, self.line_classes)
-        # add_line_idx_for_words(pred_img, self.line_classes, self.text_classes)
-        # add_column_idx_for_words(pred_img, self.text_classes)
-        # add_word_indexes(pred_img, self.text_classes)
+        # visualize_ordering(image, pred_img, self.line_classes, 'page_idx')
+
+        add_line_idx_for_lines(pred_img, self.line_classes)
+        add_line_idx_for_words(pred_img, self.line_classes, self.text_classes)
+        add_column_idx_for_words(pred_img, self.text_classes)
+        add_word_indexes(pred_img, self.text_classes)
+
+        visualize_ordering(image, pred_img, self.text_classes, 'word_idx')
 
         return image, pred_img
