@@ -24,8 +24,8 @@
             "ocr_classes": ["handwritten_text_shrinked_mask1"]
         },
         "LineFinder": {
-            "line_classes": [],
-            "text_classes": []
+            "line_classes": ["lines"],
+            "text_classes": ["handwritten_text_shrinked_mask1"]
         }
     }
 }
