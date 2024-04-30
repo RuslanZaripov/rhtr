@@ -1,15 +1,32 @@
 import numpy as np
 
-import src.ocr as ocr
+# import src.ocr as ocr
 import src.pipeline.config
 import src.pipeline.segmpostproc
 import src.pipeline.anglerestorer
-import src.segmentation.predictor
+# import src.segmentation.predictor
 import src.pipeline.linefinder
 
 
 from src.pipeline.segmentor_utils import UNet
 from src.pipeline.word_recognition_utils import TrOCR
+
+import time
+from functools import wraps
+
+
+def timeit(func):
+    @wraps(func)
+    def timeit_wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        total_time = end_time - start_time
+        # first item in the args, ie `args[0]` is `self`
+        print(f'Function {func.__name__} Took {total_time:.4f} seconds')
+        return result
+
+    return timeit_wrapper
 
 
 def visualize(image, pred_img):
@@ -45,12 +62,13 @@ class WordSegmentation:
             config_path: str,
             pipeline_config: src.pipeline.config.Config,
     ):
-        # self.segm_predictor = UNet()
-        self.segm_predictor = src.segmentation.predictor.SegmPredictor(
-            model_path=model_path,
-            config_path=config_path,
-        )
+        self.segm_predictor = UNet()
+        # self.segm_predictor = src.segmentation.predictor.SegmPredictor(
+        #     model_path=model_path,
+        #     config_path=config_path,
+        # )
 
+    @timeit
     def __call__(self, image, pred_img):
         pred_img = self.segm_predictor([image])[0]
 
@@ -71,6 +89,7 @@ class OpticalCharacterRecognition:
         # self.recognizer = ocr.OCRTorchModel(model_path, config_path)
         self.recognizer = TrOCR()
 
+    @timeit
     def __call__(self, image: np.ndarray, data: dict) -> tuple[np.ndarray, dict]:
         crops = [prediction['crop']
                  for prediction in data['predictions']

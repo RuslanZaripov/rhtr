@@ -1,6 +1,13 @@
+import torch
 from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 from itertools import chain
-import torch
+
+
+def get_model(model_path):
+    """Load a Hugging Face model and tokenizer from the specified directory"""
+    processor = TrOCRProcessor.from_pretrained(model_path)
+    trained_model = VisionEncoderDecoderModel.from_pretrained(model_path)
+    return processor, trained_model
 
 
 def batch(iterable, batch_size):
@@ -15,14 +22,14 @@ def flatten(matrix):
 
 class TrOCR:
     def __init__(self):
-        # raxtemur/trocr-base-ru
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-        self.processor = TrOCRProcessor.from_pretrained("raxtemur/trocr-base-ru")
-        self.trained_model = VisionEncoderDecoderModel.from_pretrained("raxtemur/trocr-base-ru").to(self.device)
+        model = get_model('models/tr_ocr/')
+        self.processor = model[0]
+        self.trained_model = model[1].to(self.device)
 
     def __call__(self, images):
-        return flatten([self.ocr(b) for b in batch(images, 100)])
+        return flatten([self.ocr(b) for b in batch(images, 50)])
 
     def ocr(self, images):
         # We can directly perform OCR on cropped images.

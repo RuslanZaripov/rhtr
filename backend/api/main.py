@@ -15,19 +15,19 @@ rhtr_api.add_middleware(
     allow_headers=["*"],
 )
 
+predictor = src.pipeline.pipelinepredictor.PipelinePredictor(
+    config_path='src/pipeline/scripts/pipeline_config.json'
+)
 
-@rhtr_api.post("/uploadfile/")
+
+@rhtr_api.post("/uploadfile")
 def create_upload_files(file: UploadFile):
     def bbox2xywh(bbox):
         x1, y1, x2, y2 = bbox
         return {"x": x1, "y": y1, "width": x2 - x1, "height": y2 - y1}
 
     image = cv2.imdecode(np.frombuffer(file.file.read(), np.uint8), cv2.IMREAD_COLOR)
-    print(f"Input image: {image.shape=}")
-
-    predictor = src.pipeline.pipelinepredictor.PipelinePredictor(
-        config_path='src/pipeline/scripts/pipeline_config.json'
-    )
+    print(f"Input image: {image.shape=} {file.filename=}")
     rotated_image, data = predictor.predict(image)
 
     filtered_words = filter(
@@ -40,7 +40,7 @@ def create_upload_files(file: UploadFile):
     # print(f"{len(sorted_predictions)=}")
 
     result = {"filenames": file.filename,
-              "words": [{"word": prediction['text'], "rect": bbox2xywh(prediction['rotated_bbox'])}
+              "words": [{"word": prediction['text'], "rect": bbox2xywh(prediction['bbox'])}
                         for prediction in filtered_words]
               }
     print(f"{result=}")

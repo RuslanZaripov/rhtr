@@ -1,0 +1,8 @@
+version: '3.7'
+
+services:
+  api:
+    build: .
+    container_name: rhtr-api
+    ports:
+      - "8000:8000"

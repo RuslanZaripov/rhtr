@@ -77,7 +77,7 @@ class ContourPostprocessors:
             if prediction['class_name'] in self.class2postprocessors:
                 postprocessors = self.class2postprocessors[prediction['class_name']]
 
-                bbox = None
+                bbox = None if 'bbox' not in prediction else prediction['bbox']
                 crop = None
                 contour = prediction['rotated_polygon'] if 'rotated_polygon' in prediction else prediction['polygon']
 

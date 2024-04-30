@@ -3,8 +3,6 @@ import albumentations as A
 import numpy as np
 import torchvision
 
-from src.segmentation.predictor import get_contours_from_mask, rescale_contours, contour2bbox, reduce_contours_dims
-
 from scipy import ndimage as ndi
 from skimage.color import label2rgb
 from skimage.measure import label, regionprops
@@ -15,6 +13,62 @@ import cv2
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import matplotlib
+
+
+def get_contours_from_mask(mask, min_area=5):
+    contours, hierarchy = cv2.findContours(mask.astype(np.uint8),
+                                           cv2.RETR_LIST,
+                                           cv2.CHAIN_APPROX_SIMPLE)
+    contour_list = []
+    for contour in contours:
+        if cv2.contourArea(contour) >= min_area:
+            contour_list.append(contour)
+    return contour_list
+
+
+def rescale_contours(
+        contours, pred_height, pred_width, image_height, image_width
+):
+    """Rescale contours from prediction mask shape to input image size."""
+    y_ratio = image_height / pred_height
+    x_ratio = image_width / pred_width
+    scale = (x_ratio, y_ratio)
+    for contour in contours:
+        for i in range(2):
+            contour[:, :, i] = contour[:, :, i] * scale[i]
+    return contours
+
+
+def reduce_contours_dims(contours):
+    reduced_contours = []
+    for contour in contours:
+        contour = [[int(i[0][0]), int(i[0][1])] for i in contour]
+        reduced_contours.append(contour)
+    return reduced_contours
+
+
+def rescale_contour(
+        contour, pred_height, pred_width, image_height, image_width
+):
+    """Rescale contour from prediction mask shape to input image size."""
+    y_ratio = image_height / pred_height
+    x_ratio = image_width / pred_width
+    scale = (x_ratio, y_ratio)
+    for i in range(2):
+        contour[:, i] = (contour[:, i] * scale[i]).astype(np.int64)
+    return contour
+
+
+def reduce_countour_dims(contour):
+    contour = [[int(i[0][0]), int(i[0][1])] for i in contour]
+    return contour
+
+
+def contour2bbox(contour):
+    """Get bbox from contour."""
+    assert len(contour) > 0, "Contour is empty."
+    x, y, w, h = cv2.boundingRect(contour.astype(np.float32))
+    return x, y, x + w, y + h
 
 
 def sigmoid(x):
@@ -43,27 +97,27 @@ def colorize(probability_map):
 
 
 def energy_baseline(msk, energy):
-    fig = plt.figure(figsize=(10, 10))
+    # fig = plt.figure(figsize=(10, 10))
 
-    fig.add_subplot(1, 3, 1)
-    plt.imshow(colorize(energy))
+    # fig.add_subplot(1, 3, 1)
+    # plt.imshow(colorize(energy))
 
     msk_ths = (np.copy(energy) > 0.1) * 1
 
-    fig.add_subplot(1, 3, 2)
-    plt.imshow(msk_ths)
+    # fig.add_subplot(1, 3, 2)
+    # plt.imshow(msk_ths)
 
     # import seaborn as sns
     # sns.heatmap(energy, cmap='rainbow', cbar=True, xticklabels=False, yticklabels=False)
     # plt.savefig(f'data/processed/energy.png')
     # plt.clf()
 
-    energy_ths = (np.copy(energy) > 0.8) * 1
+    energy_ths = (np.copy(energy) > 0.5) * 1
 
-    fig.add_subplot(1, 3, 3)
-    plt.imshow(energy_ths)
+    # fig.add_subplot(1, 3, 3)
+    # plt.imshow(energy_ths)
 
-    plt.show()
+    # plt.show()
 
     distance = ndi.distance_transform_edt(msk_ths)
 
@@ -113,7 +167,7 @@ def rescale_contour(
 def get_contours(probability_map, image):
     img_h, img_w = image.shape[:2]
 
-    mask = probability_map > 0.01
+    mask = probability_map > 0.5
 
     contours = get_contours_from_mask(mask, 50)
 
@@ -189,7 +243,7 @@ def get_preds(images, preds, cuda_torch_input=True):
 class UNet:
     def __init__(self):
         self.ort_session = onnxruntime.InferenceSession(
-            "/content/linknet-3.onnx")
+            "models/segmentation/linknet-7.onnx")
 
         ADE_MEAN = np.array([123.675, 116.280, 103.530]) / 255
         ADE_STD = np.array([58.395, 57.120, 57.375]) / 255

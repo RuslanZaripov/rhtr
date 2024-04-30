@@ -110,11 +110,8 @@ class ImageAngleRestorer:
         contours = []
         restoring_contours = []
         for prediction in data['predictions']:
-
-            contour = prediction['polygon']
-            contour = np.array([contour])
+            contour = np.array([prediction['polygon']])
             contours.append(contour)
-
             if prediction['class_name'] in self.restoring_class_names:
                 restoring_contours.append(contour)
 
@@ -123,6 +120,6 @@ class ImageAngleRestorer:
             image, contours = rotate_image_and_contours(image, contours, -angle)
 
         for prediction, contour in zip(data['predictions'], contours):
-            contour = [[int(i[0]), int(i[1])] for i in contour[0]]
+            contour = [[int(p[0]), int(p[1])] for p in contour[0]]
             prediction['rotated_polygon'] = contour
         return image, data
