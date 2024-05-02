@@ -1,8 +1,95 @@
 version: '3.7'
 
 services:
+  broker:
+    container_name: rhtr-broker
+    image: rabbitmq:3.8.2-management-alpine
+    environment:
+      - RABBITMQ_SERVER_ERL_ARGS=-rabbit heartbeat 1800
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - network
+
+  backend:
+    container_name: rhtr-backend
+    image: redis:5.0.7
+    ports:
+      - "6379:6379"
+    networks:
+      - network
+    command: redis-server --requirepass password
+
   api:
-    build: .
+    build: ./backend/api
     container_name: rhtr-api
+    environment:
+      - REDIS_HOST=backend
+      - RABBITMQ_HOST=broker
+    links:
+      - broker:broker
+      - backend:backend
     ports:
       - "8000:8000"
+    networks:
+      - network
+    depends_on:
+      - broker
+    volumes:
+      - shared-data:/api/shared
+
+  recognizer:
+    build: .
+    container_name: rhtr-recognizer
+    environment:
+      - REDIS_HOST=backend
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_PASS=password
+      - RABBITMQ_HOST=broker
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASS=guest
+    links:
+      - broker:broker
+      - backend:backend
+    networks:
+      - network
+    command: celery -A worker.rhtr.rhtr_celery worker --loglevel=INFO --pool=solo --hostname=rhtr@%h --queues rhtr -E # --config=worker.config
+    depends_on:
+      - broker
+      - backend
+    volumes:
+      - shared-data:/rhtr/shared
+
+  flower:
+    build: .
+    container_name: rhtr-flower
+    environment:
+      - REDIS_HOST=backend
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_PASS=password
+      - RABBITMQ_HOST=broker
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASS=guest
+    command: celery -A worker.rhtr.rhtr_celery flower
+    ports:
+      - "5555:5555"
+    links:
+      - broker:broker
+      - backend:backend
+    networks:
+      - network
+    depends_on:
+      - broker
+      - backend
+      - recognizer
+
+networks:
+  network: { }
+
+volumes:
+  shared-data:

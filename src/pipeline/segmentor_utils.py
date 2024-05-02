@@ -152,18 +152,6 @@ def energy_baseline(msk, energy):
     return labels
 
 
-def rescale_contour(
-        contour, pred_height, pred_width, image_height, image_width
-):
-    """Rescale contour from prediction mask shape to input image size."""
-    y_ratio = image_height / pred_height
-    x_ratio = image_width / pred_width
-    scale = (x_ratio, y_ratio)
-    for i in range(2):
-        contour[:, i] = (contour[:, i] * scale[i]).astype(np.int64)
-    return contour
-
-
 def get_contours(probability_map, image):
     img_h, img_w = image.shape[:2]
 

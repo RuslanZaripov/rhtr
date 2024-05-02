@@ -2,9 +2,7 @@
 FROM python:3.10-slim
 # FROM pachyderm/opencv:2.6.0
 
-COPY /backend/api/requirements.txt /rhtr/requirements.txt
-
-COPY /backend/api/download_models.py /rhtr/download_models.py
+COPY /backend/worker/requirements.txt /rhtr/requirements.txt
 
 WORKDIR /rhtr
 
@@ -26,17 +24,16 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
-RUN python download_models.py
+COPY /backend/worker/download_models.py /rhtr/worker/download_models.py
 
-COPY /backend/api/main.py /rhtr/api/main.py
+RUN python ./worker/download_models.py
+
+COPY /models/segmentation/linknet-7.onnx /rhtr/models/segmentation/linknet-7.onnx
+
+COPY /backend/worker /rhtr/worker
 
 COPY /src/pipeline /rhtr/src/pipeline
 
 RUN touch /rhtr/src/__init__.py
 
-COPY /models/segmentation/linknet-7.onnx /rhtr/models/segmentation/linknet-7.onnx
-
-# EXPOSE <port> [<port>/<protocol>...]
-EXPOSE 8000
-
-CMD uvicorn api.main:rhtr_api --port 8000 --host 0.0.0.0
+RUN pip install flower
