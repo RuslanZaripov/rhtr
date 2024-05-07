@@ -129,11 +129,14 @@ rhtr_celery.conf.worker_prefetch_multiplier = 1
 rhtr_celery.conf.task_acks_late = True
 rhtr_celery.conf.result_expires = 60 * 60 * 48  # 48 hours in seconds
 
+IMAGES_DIR = getenv("IMAGES_DIR", "/rhtr/shared")
+os.makedirs(IMAGES_DIR, exist_ok=True)
+
 
 @rhtr_celery.task(bind=True, name="process_image")
 def process_image(self, uuid):
 
-    file_path = f'/rhtr/shared/{uuid}.txt'
+    file_path = f'{IMAGES_DIR}/{uuid}.txt'
     with open(file_path, 'rb') as file:
         data = file.read()
 
