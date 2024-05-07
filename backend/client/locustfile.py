@@ -3,7 +3,7 @@ import random
 from locust import HttpUser, task, between
 import os
 
-images_root = 'C:\\Users\\rusla\\Desktop\\ITMO\\7-sem\\thesis\\rhtr\\data\\handwritten_text_images'
+images_root = 'data/handwritten_text_images'
 image_files = os.listdir(images_root)
 image_files = [image for image in image_files if image.endswith('.jpg')][:2]
 

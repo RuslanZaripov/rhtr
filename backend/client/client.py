@@ -90,7 +90,7 @@ if __name__ == "__main__":
     #     output = data['result'] if data['status'] == 'SUCCESS' else data['error']
     #     print(f"{idx + 1:2d} - {data['id']} - {data['status']} - {output}")
 
-    images_root = 'C:\\Users\\rusla\\Desktop\\ITMO\\7-sem\\thesis\\rhtr\\data\\handwritten_text_images'
+    images_root = 'data/handwritten_text_images'
     images = os.listdir(images_root)
     images = [image for image in images if image.endswith('.jpg')]
 
