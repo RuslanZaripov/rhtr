@@ -32,7 +32,7 @@ services:
       - broker:broker
       - backend:backend
     ports:
-      - "8000:8000"
+      - "9023:9023"
     networks:
       - network
     depends_on:

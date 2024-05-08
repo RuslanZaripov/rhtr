@@ -10,6 +10,6 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 COPY main.py /api/main.py
 
-EXPOSE 8000
+EXPOSE 9023
 
-CMD uvicorn main:rhtr_api --port 8000 --host 0.0.0.0
+CMD uvicorn main:rhtr_api --port 9023 --host 0.0.0.0
