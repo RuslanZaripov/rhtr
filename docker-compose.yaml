@@ -59,6 +59,13 @@ services:
     networks:
       - network
     command: celery -A worker.rhtr.rhtr_celery worker --loglevel=INFO --pool=solo --hostname=rhtr@%h --queues rhtr -E # --config=worker.config
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
     depends_on:
       - broker
       - backend
