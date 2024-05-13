@@ -6,8 +6,6 @@ exlude-list.txt
 external_notebooks
 models.zip
 notebooks
-output.jpg
-predicted_probs.jpg
 references
 models
 .git
