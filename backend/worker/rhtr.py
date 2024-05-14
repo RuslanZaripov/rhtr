@@ -157,8 +157,6 @@ def process_image(self, uuid):
         data['predictions']
     )
 
-    self.update_state(state=states.SUCCESS, meta={'custom': 'Image processed'})
-
     # print(f"{data['predictions'][0].keys()=}")
     # sorted_predictions = sorted(filtered_words, key=lambda prediction: prediction['word_idx'])
     # print(f"{len(sorted_predictions)=}")
@@ -168,4 +166,7 @@ def process_image(self, uuid):
                   for prediction in filtered_words]
     }
     print(f"{result=}")
+
+    self.update_state(state=states.SUCCESS, meta={'words': result['words']})
+
     return result
