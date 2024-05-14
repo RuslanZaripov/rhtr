@@ -60,8 +60,9 @@ def process_image(self, uuid):
     )
 
     # print(f"{data['predictions'][0].keys()=}")
+
+    # # Sorting by word_idx
     # sorted_predictions = sorted(filtered_words, key=lambda prediction: prediction['word_idx'])
-    # print(f"{len(sorted_predictions)=}")
 
     result = {
         "words": [{"word": prediction['text'], "rect": bbox2xywh(prediction['bbox'])}
