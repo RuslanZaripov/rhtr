@@ -4,11 +4,16 @@ from os import getenv
 import cv2
 import numpy as np
 from celery import Celery, states
-from kombu import Queue
 
 import src.pipeline.pipelinepredictor
 from .backend import is_backend_running, get_backend_url
 from .broker import is_broker_running, get_broker_url
+from .config import (
+    TASK_QUEUES,
+    WORKER_PREFETCH_MULTIPLIER,
+    TASK_ACKS_LATE,
+    RESULT_EXPIRES
+)
 
 if not is_broker_running():
     exit()
@@ -16,26 +21,23 @@ if not is_broker_running():
 if not is_backend_running():
     exit()
 
+rhtr_celery = Celery("rhtr", broker=get_broker_url(), backend=get_backend_url())
+rhtr_celery.conf.task_queues = TASK_QUEUES
+rhtr_celery.conf.worker_prefetch_multiplier = WORKER_PREFETCH_MULTIPLIER
+rhtr_celery.conf.task_acks_late = TASK_ACKS_LATE
+rhtr_celery.conf.result_expires = RESULT_EXPIRES
+
 predictor = src.pipeline.pipelinepredictor.PipelinePredictor(
     config_path='src/pipeline/scripts/pipeline_config.json'
 )
 
-rhtr_celery = Celery("rhtr", broker=get_broker_url(), backend=get_backend_url())
-rhtr_celery.conf.task_queues = (
-    Queue(name="rhtr"),
-)
-rhtr_celery.conf.worker_prefetch_multiplier = 1
-rhtr_celery.conf.task_acks_late = True
-rhtr_celery.conf.result_expires = 60 * 60 * 48  # 48 hours in seconds
-
-IMAGES_DIR = getenv("IMAGES_DIR", "/rhtr/shared")
-os.makedirs(IMAGES_DIR, exist_ok=True)
+IMAGES_SAVE_DIR = getenv("IMAGES_SAVE_DIR", "/rhtr/shared")
+os.makedirs(IMAGES_SAVE_DIR, exist_ok=True)
 
 
 @rhtr_celery.task(bind=True, name="process_image")
 def process_image(self, uuid):
-
-    file_path = f'{IMAGES_DIR}/{uuid}.txt'
+    file_path = f'{IMAGES_SAVE_DIR}/{uuid}.txt'
     with open(file_path, 'rb') as file:
         data = file.read()
 
@@ -48,7 +50,8 @@ def process_image(self, uuid):
         return {"x": x1, "y": y1, "width": x2 - x1, "height": y2 - y1}
 
     image = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
-    print(f"Input image: {image.shape=}")
+    print(f"Image of size {image.shape=} accepted by worker")
+
     rotated_image, data = predictor.predict(image)
 
     filtered_words = filter(

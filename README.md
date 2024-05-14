@@ -66,5 +66,4 @@ docker container stats
 locust -f .\backend\client\locustfile.py --legacy-ui
 ```
 
-- Open web interface which was written in console output
-- 
+- Open web interface url which was written in console output and fill in api url

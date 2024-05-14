@@ -48,8 +48,8 @@ BACKEND = "redis://{password}{hostname}{port}{db}".format(
 
 app_celery = Celery(broker=BROKER, backend=BACKEND)
 
-IMAGES_DIR = getenv("IMAGES_DIR", "/api/shared")
-os.makedirs(IMAGES_DIR, exist_ok=True)
+IMAGES_SAVE_DIR = getenv("IMAGES_SAVE_DIR", "/api/shared")
+os.makedirs(IMAGES_SAVE_DIR, exist_ok=True)
 
 
 def send_result(task_id):
@@ -72,8 +72,9 @@ def send_result(task_id):
 def celery_upload_file(file: UploadFile, queue: BackgroundTasks):
     import uuid
     uuid = uuid.uuid4()
+
     content = file.file.read()
-    with open(f"{IMAGES_DIR}/{uuid}.txt", "wb") as binary_file:
+    with open(f"{IMAGES_SAVE_DIR}/{uuid}.txt", "wb") as binary_file:
         binary_file.write(content)
 
     task = app_celery.send_task(

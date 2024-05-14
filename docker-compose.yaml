@@ -27,7 +27,7 @@ services:
     environment:
       - REDIS_HOST=backend
       - RABBITMQ_HOST=broker
-      - IMAGES_DIR=/api/shared
+      - IMAGES_SAVE_DIR=/api/shared
     links:
       - broker:broker
       - backend:backend
@@ -52,7 +52,7 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=guest
       - RABBITMQ_PASS=guest
-      - IMAGES_DIR=/rhtr/shared
+      - IMAGES_SAVE_DIR=/rhtr/shared
     links:
       - broker:broker
       - backend:backend
