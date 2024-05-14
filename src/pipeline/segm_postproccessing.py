@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import src.pipeline.config
 
 
 class BboxFromContour:
@@ -61,15 +60,11 @@ class ContourPostprocessors:
         "CropByBbox": BboxCropper,
     }
 
-    def __init__(
-            self,
-            class2postprocessors: dict,
-            pipeline_config: src.pipeline.config.Config,
-    ):
+    def __init__(self, args):
         self.class2postprocessors = {
             class_name: [self.CONTOUR_PROCESS_DICT[postprocess_name](**args)
-                         for postprocess_name, args in postprocess_func.items()]
-            for class_name, postprocess_func in class2postprocessors.items()
+                         for postprocess_name, args in postprocess_names.items()]
+            for class_name, postprocess_names in args['class2postprocessors'].items()
         }
 
     def __call__(self, image, data):

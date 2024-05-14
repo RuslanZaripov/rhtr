@@ -14,6 +14,8 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import matplotlib
 
+from src.pipeline.abstract import Segmentor
+
 
 def get_contours_from_mask(mask, min_area=5):
     contours, hierarchy = cv2.findContours(mask.astype(np.uint8),
@@ -228,10 +230,9 @@ def get_preds(images, preds, cuda_torch_input=True):
     return pred_data
 
 
-class UNet:
-    def __init__(self):
-        self.ort_session = onnxruntime.InferenceSession(
-            "models/segmentation/linknet-7.onnx")
+class UNet(Segmentor):
+    def __init__(self, model_path):
+        self.ort_session = onnxruntime.InferenceSession(model_path)
 
         ADE_MEAN = np.array([123.675, 116.280, 103.530]) / 255
         ADE_STD = np.array([58.395, 57.120, 57.375]) / 255
@@ -242,7 +243,7 @@ class UNet:
             A.Normalize(mean=ADE_MEAN, std=ADE_STD),
         ])
 
-    def __call__(self, images):
+    def predict(self, images):
         outputs = []
         for image in images:
             transformed_image = self.train_transform(image=image)['image']

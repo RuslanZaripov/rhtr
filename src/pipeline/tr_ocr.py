@@ -1,6 +1,9 @@
+from itertools import chain
+
 import torch
 from transformers import TrOCRProcessor, VisionEncoderDecoderModel
-from itertools import chain
+
+from src.pipeline.abstract import Recognizer
 
 
 def get_model(model_path):
@@ -20,15 +23,15 @@ def flatten(matrix):
     return list(chain.from_iterable(matrix))
 
 
-class TrOCR:
-    def __init__(self):
+class TrOCR(Recognizer):
+    def __init__(self, model_path):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-        model = get_model('models/tr_ocr/')
+        model = get_model(model_path)
         self.processor = model[0]
         self.trained_model = model[1].to(self.device)
 
-    def __call__(self, images):
+    def predict(self, images):
         return flatten([self.ocr(b) for b in batch(images, 50)])
 
     def ocr(self, images):

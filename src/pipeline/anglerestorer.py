@@ -1,7 +1,7 @@
-import numpy as np
-import cv2
 import math
-import src.pipeline.config
+
+import cv2
+import numpy as np
 
 
 def unit_vector(v):
@@ -90,20 +90,12 @@ class ImageAngleRestorer:
     this angle.
 
     Args:
-        restoring_class_names (list of str):  List of class names using find
-            angle of the image.
-        pipeline_config (ocrpipeline.config.Config): The pipeline config.json.
         min_angle_to_rotate (int): The safe range of angles within which image
             rotation does not occur (-min_angle_to_rotate; min_angle_to_rotate)
     """
 
-    def __init__(
-            self,
-            restoring_class_names,
-            pipeline_config: src.pipeline.config.Config,
-            min_angle_to_rotate=0.5,
-    ):
-        self.restoring_class_names = restoring_class_names
+    def __init__(self, args, min_angle_to_rotate=0.5):
+        self.restoring_class_names = args['restoring_class_names']
         self.min_angle_to_rotate = min_angle_to_rotate
 
     def __call__(self, image, data):

@@ -1,8 +1,8 @@
 {
     "pipeline": {
         "WordSegmentation": {
-            "model_path": "models/segmentation/3/experiments/segm/2024-03-04_12-54-43/LinkResNet-6-0.4158.ckpt",
-            "config_path": "models/segmentation/3/segm_config.json"
+            "model_name": "UNet",
+            "model_path": "models/segmentation/linknet-7.onnx"
         },
         "RestoreImageAngle": {
             "restoring_class_names": ["handwritten_text_shrinked_mask1"]
@@ -19,8 +19,8 @@
             }
         },
         "OpticalCharacterRecognition": {
-            "model_path": "models/ocr/CRNN-82-0.4128.ckpt",
-            "config_path": "src/ocr/scripts/htr_config.yaml",
+            "model_name": "TrOCR",
+            "model_path": "models/tr_ocr/",
             "ocr_classes": ["handwritten_text_shrinked_mask1"]
         },
         "LineFinder": {

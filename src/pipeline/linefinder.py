@@ -347,18 +347,13 @@ class LineFinder:
     polygons on the image.
 
     Args:
-        line_classes (list of strs): List of line class names.
-        text_classes (list of strs): List of text class names.
         pages_clust_dist (float): Relative (to image width) distance between two
             clusters of lines' polygons to consider that image has two pages.
     """
 
-    def __init__(
-            self, pipeline_config, line_classes, text_classes,
-            pages_clust_dist=0.25
-    ):
-        self.line_classes = line_classes
-        self.text_classes = text_classes
+    def __init__(self, args, pages_clust_dist=0.25):
+        self.line_classes = args['line_classes']
+        self.text_classes = args['text_classes']
         self.pages_clust_dist = pages_clust_dist
 
     def __call__(self, image, pred_img):

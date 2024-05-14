@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from celery import Celery, states
 
-import src.pipeline.pipelinepredictor
+import src.pipeline.pipeline_predictor
 from .backend import is_backend_running, get_backend_url
 from .broker import is_broker_running, get_broker_url
 from .config import (
@@ -27,7 +27,7 @@ rhtr_celery.conf.worker_prefetch_multiplier = WORKER_PREFETCH_MULTIPLIER
 rhtr_celery.conf.task_acks_late = TASK_ACKS_LATE
 rhtr_celery.conf.result_expires = RESULT_EXPIRES
 
-predictor = src.pipeline.pipelinepredictor.PipelinePredictor(
+predictor = src.pipeline.pipeline_predictor.PipelinePredictor(
     config_path='src/pipeline/scripts/pipeline_config.json'
 )
 
