@@ -3,7 +3,7 @@
 __pycache__/
 README.md
 data
-exlude-list.txt
+exclude-list.txt
 external_notebooks
 models.zip
 notebooks
