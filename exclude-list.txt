@@ -12,3 +12,5 @@ models
 .git
 .gitignore
 requirements.txt
+
+backend/client/
