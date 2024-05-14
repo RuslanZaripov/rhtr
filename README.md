@@ -40,12 +40,6 @@ docker compose logs -f -t
 docker exec -it {CONTAINER_ID} bash
 ```
 
-- run locust testing
-
-```bash
-locust -f .\backend\client\locustfile.py --legacy-ui
-```
-
 ```bash
 docker image prune
 ```
@@ -56,11 +50,21 @@ docker container stats
 
 # Testing
 
-- Configure `IMAGE_DIR` and `API_URL` at the top of the file ./backend/client/client.py
+- Configure `IMAGE_DIR` and `API_URL` in file `./backend/client/config.py`
 
 1. `IMAGE_DIR` - path to the directory with images, all images will be processed
 2. `API_URL` - url of the API service (e.g. http://localhost:8000)
 
-- Run console command `python ./backend/client/client.py` 
+- Run console command `python ./backend/client/client.py`
 
+# Locust testing
 
+- Same way as in previous section configure `IMAGE_DIR` and `API_URL`
+- Run locust testing using command below
+
+```bash
+locust -f .\backend\client\locustfile.py --legacy-ui
+```
+
+- Open web interface which was written in console output
+- 

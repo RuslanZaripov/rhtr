@@ -1,13 +1,13 @@
 import random
 import time
 import requests
-
-from locust import HttpUser, task, between, events
 import os
 
-images_root = 'data/handwritten_text_images'
-image_files = os.listdir(images_root)
-image_files = [image for image in image_files if image.endswith('.jpg')]
+from locust import HttpUser, task, between, events
+from celery import states
+
+from backend.client.client import make_image_post
+from backend.client.config import IMAGE_PATHS, IMAGE_DIR
 
 
 class MyUser(HttpUser):
@@ -20,23 +20,17 @@ class MyUser(HttpUser):
     def get_result(self, task_id):
         return requests.get(f"{self.client.base_url}/task/{task_id}").json()
 
-    def uploadfile(self, image_path):
-        return requests.post(f"{self.client.base_url}/uploadfile",
-                             files={'file': open(image_path, mode='rb')}).json()
-
     @task
     def recognize(self):
-        image_file = random.choice(image_files)
-        image_path = os.path.join(images_root, image_file)
+        image_file = random.choice(IMAGE_PATHS)
+        image_path = os.path.join(IMAGE_DIR, image_file)
 
-        response = self.uploadfile(image_path)
-        task_id = response['task_id']
+        status, task_id = make_image_post(str(image_path))
 
         start = time.time()
 
         response = self.get_result(task_id)
-
-        while response['status'] != 'SUCCESS':
+        while response['status'] != states.SUCCESS:
             response = self.get_result(task_id)
 
         end = time.time()
