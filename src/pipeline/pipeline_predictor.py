@@ -9,9 +9,6 @@ from src.pipeline.segm_postproccessing import ContourPostprocessors
 from src.pipeline.word_segmentation import WordSegmentation
 
 
-# import src.ocr as ocr
-# import src.segmentation.predictor
-
 class PipelinePredictor:
     STEPS_DICT = {
         'WordSegmentation': WordSegmentation,

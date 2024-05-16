@@ -2,7 +2,7 @@ import numpy as np
 
 from src.pipeline.abstract import Recognizer
 from src.pipeline.tr_ocr import TrOCR
-from src.pipeline.utils import get_constructor_params, timeit
+from src.pipeline.utils import get_constructor_params, timeit, collect_params_from_dict
 
 
 def recognizer_factory(args: dict) -> Recognizer:
@@ -13,12 +13,7 @@ def recognizer_factory(args: dict) -> Recognizer:
     if source in factory:
         recognoizer = factory[source]
         params = get_constructor_params(recognoizer)
-        input_args = {
-            param: args[param]
-            if param in args.keys()
-            else print(f"WARN: param {param} not found in args")
-            for param in params
-        }
+        input_args = collect_params_from_dict(params, args)
         return recognoizer(**input_args)
     else:
         raise ValueError(f"source {source} is not supported. Please pass a valid source.")

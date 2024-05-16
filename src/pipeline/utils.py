@@ -21,15 +21,18 @@ def timeit(func):
     return timeit_wrapper
 
 
-def removekey(d, key):
-    r = dict(d)
-    del r[key]
-    return r
-
-
 def get_constructor_params(cls):
     init_signature = inspect.signature(cls.__init__)
     return [param for param in init_signature.parameters][1:]
+
+
+def collect_params_from_dict(params, args):
+    return {
+        param: args[param]
+        if param in args.keys()
+        else print(f"WARN: param {param} not found in args {args.keys()}")
+        for param in params
+    }
 
 
 def img_crop(image, bbox):
@@ -121,6 +124,9 @@ def visualize(image, data):
 
 class AverageMeter:
     """Computes and stores the average and current value"""
+    avg: float
+    sum: float
+    count: int
 
     def __init__(self):
         self.reset()

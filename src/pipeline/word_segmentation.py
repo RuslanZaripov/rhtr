@@ -2,7 +2,7 @@ import numpy as np
 
 from src.pipeline.abstract import Segmentor
 from src.pipeline.unet import UNet
-from src.pipeline.utils import get_constructor_params, timeit, visualize
+from src.pipeline.utils import get_constructor_params, timeit, visualize, collect_params_from_dict
 
 
 def segmentation_factory(args: dict) -> Segmentor:
@@ -13,12 +13,7 @@ def segmentation_factory(args: dict) -> Segmentor:
     if source in factory:
         segmentor = factory[source]
         params = get_constructor_params(segmentor)
-        input_args = {
-            param: args[param]
-            if param in args.keys()
-            else print(f"WARN: param {param} not found in args")
-            for param in params
-        }
+        input_args = collect_params_from_dict(params, args)
         return segmentor(**input_args)
     else:
         raise ValueError(f"source {source} is not supported. Please pass a valid source.")
@@ -32,15 +27,16 @@ class WordSegmentation:
     @timeit
     def __call__(self, image: np.ndarray, data: dict) -> tuple[np.ndarray, dict]:
         """
-        :return dict: { 'predictions': [
-            { 'polygon': np.ndarray (N, 2),
-              'bbox': tuple (4),
-              'class_name': str
-            }
-        ] }
+        :return dict: {
+            'predictions': [
+                {
+                    'polygon': np.ndarray (N, 2),
+                    'bbox': tuple (4),
+                    'class_name': str
+                }
+            ]
+        }
         """
-
         data = self.segm_predictor.predict([image])[0]
-        print(f"{data['predictions'][0]['polygon'].shape=}")
         # visualize(image, data)
         return image, data
