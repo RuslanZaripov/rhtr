@@ -12,52 +12,43 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
+from src.segmentation.predictor import is_valid_polygon, rescale_contour
 from src.segmentation.utils import get_filename, delete_and_create_dir
-
-
-def min_max_scale(data):
-    return (data - np.min(data)) / (np.max(data) - np.min(data))
-
-
-def is_valid_polygon(polygon):
-    """Check if a polygon is valid. Return True if valid and False otherwise.
-
-    Args:
-        polygon (shapely.geometry.Polygon): The polygon.
-    """
-    return polygon.length >= 1 and polygon.area > 0
-
-
-def contour2bbox(contour):
-    """Get bbox from contour."""
-    assert len(contour) > 0, "Contour is empty."
-    x, y, w, h = cv2.boundingRect(contour.astype(np.float32))
-    return x, y, x + w, y + h
-
-
-def rescale_contour(contour, pred_height, pred_width, image_height, image_width):
-    """Rescale contour from prediction mask shape to input image size."""
-    y_ratio = image_height / pred_height
-    x_ratio = image_width / pred_width
-    scale = (x_ratio, y_ratio)
-    for i in range(2):
-        contour[:, i] = (contour[:, i] * scale[i]).astype(np.int64)
-    return contour
-
 
 print(f"{multiprocessing.cpu_count()=}")
 semaphore = multiprocessing.Semaphore(multiprocessing.cpu_count() - 1)
 
 
+def numbers2coords(list_of_numbers):
+    """Convert list of numbers to list of tuple coords x, y."""
+    bbox = [[list_of_numbers[i], list_of_numbers[i + 1]]
+            for i in range(0, len(list_of_numbers), 2)]
+    return np.array(bbox)
+
+
 class SchoolSegmentationDataset(Dataset):
     """Image segmentation dataset."""
 
-    def __init__(self, json_annotations_path, image_root, folder_name, preprocessing=None, transform=None, df_path=None,
-                 keep=False):
+    def __init__(
+            self,
+            json_annotations_path,
+            image_root,
+            save_dir_path,
+            preprocessing=None,
+            transform=None,
+            df_path=None,
+            keep=False
+    ):
         """
-        Args:
-            dataset
+        :param json_annotations_path: Path to the json file with annotations.
+        :param image_root: Path to the folder with images.
+        :param save_dir_path: Path to the folder where the processed data will be stored.
+        :param preprocessing: Preprocessing function.
+        :param transform: Transform function.
+        :param df_path: Path to the dataframe with processed data.
+        :param keep: If True, the processed data will be stored cached.
         """
+
         self.image_root = image_root
         with open(json_annotations_path, 'r') as f:
             self.data = json.load(f)
@@ -76,9 +67,10 @@ class SchoolSegmentationDataset(Dataset):
         self.df_path = df_path
         if self.df_path is not None:
             self.processed_data_dir = os.path.dirname(self.df_path)
+            self.df_filename = os.path.basename(self.df_path)
+
             self.target_dir = 'target'
             self.processed_images_dir = 'image'
-            self.df_filename = os.path.basename(self.df_path)
 
             self.df = pd.read_csv(self.df_path)
 
@@ -90,7 +82,7 @@ class SchoolSegmentationDataset(Dataset):
             root_ext = get_filename(json_annotations_path)
 
             # TODO: change notebook root dir
-            self.processed_data_dir = f'/kaggle/working/{folder_name}/{root_ext}'
+            self.processed_data_dir = f'{save_dir_path}/{root_ext}'
             self.target_dir = 'target'
             self.processed_images_dir = 'image'
             self.df_filename = f'df_{root_ext}.csv'
@@ -111,15 +103,8 @@ class SchoolSegmentationDataset(Dataset):
         if self.keep or self.df_path is not None:
             self.df.to_csv(f'{self.processed_data_dir}/{self.df_filename}', index=False)
 
-    def numbers2coords(self, list_of_numbers):
-        """Convert list of numbers to list of tuple coords x, y."""
-        bbox = [[list_of_numbers[i], list_of_numbers[i + 1]]
-                for i in range(0, len(list_of_numbers), 2)]
-        return np.array(bbox)
-
     def get_class_polygons(self, image_id, categories):
-        """Get polygons from annotation for a specific image and category.
-        """
+        """Get polygons from annotation for a specific image and category."""
         polygons = []
         for data_ann in self.data['annotations']:
             if (
@@ -127,7 +112,7 @@ class SchoolSegmentationDataset(Dataset):
                     and data_ann['category_id'] in categories
                     and data_ann['segmentation']
             ):
-                polygon = self.numbers2coords(data_ann['segmentation'][0])
+                polygon = numbers2coords(data_ann['segmentation'][0])
                 polygons.append(polygon)
         return polygons
 
@@ -202,32 +187,19 @@ class SchoolSegmentationDataset(Dataset):
 
             return xmin, xmax, ymin, ymax, height, width, distance_map
 
-    #     @time_it
+    # @time_it
     def get_watershed_map(self, polygons, image_shape, shrink_range):
         watershed_energy_map = np.zeros(
             (len(shrink_range), image_shape[0], image_shape[1]), dtype=np.uint8)
 
         for idx, polygon in enumerate(polygons):
-            # first - 0.1, last - 1
             for k, shrink_ratio in enumerate(shrink_range):
                 self.add_shrinked_mask(
                     watershed_energy_map[k], np.int32(polygon), shrink_ratio, [1])
 
         return watershed_energy_map
 
-    def instance_mask(self, polygons, image_shape, shrink_range):
-        instance_mask = np.zeros(
-            (len(shrink_range), image_shape[0], image_shape[1]), dtype=np.uint8)
-
-        for idx, polygon in enumerate(polygons):
-            # first - 0.1, last - 1
-            for k, shrink_ratio in enumerate(shrink_range):
-                self.add_shrinked_mask(
-                    instance_mask[k], np.int32(polygon), shrink_ratio, [idx + 1])
-
-        return instance_mask
-
-    #     @time_it
+    # @time_it
     def get_border_map(self, polygons, image_shape, shrink_range):
         import multiprocessing
 
@@ -288,10 +260,10 @@ class SchoolSegmentationDataset(Dataset):
             except Exception as err:
                 print(err)
 
-        #         print(f"{np.min(distance_mask)}-{np.max(distance_mask)}")
-        #         import seaborn as sns
-        #         sns.heatmap(distance_mask, cmap='rainbow', cbar=True, xticklabels=False, yticklabels=False)
-        #         plt.show()
+        # print(f"{np.min(distance_mask)}-{np.max(distance_mask)}")
+        # import seaborn as sns
+        # sns.heatmap(distance_mask, cmap='rainbow', cbar=True, xticklabels=False, yticklabels=False)
+        # plt.show()
 
         distance_mask = distance_mask.astype(np.float32)
         distance_mask /= np.max(distance_mask)
@@ -312,7 +284,7 @@ class SchoolSegmentationDataset(Dataset):
 
         return np.array(polygon)
 
-    #     @time_it
+    # @time_it
     def get_lines_map(self, polylines, image_shape, thickness=10):
         lines_map = np.zeros(
             (image_shape[0], image_shape[1]), dtype=np.uint8)
@@ -351,7 +323,7 @@ class SchoolSegmentationDataset(Dataset):
             thickness=5
         )
 
-        #         distance_mask = self.get_distance_mask(polygons, image_shape)
+        # distance_mask = self.get_distance_mask(polygons, image_shape)
 
         masks = (binary_mask, lines_map, border_mask, watershed_energy_map)
 
@@ -371,7 +343,7 @@ class SchoolSegmentationDataset(Dataset):
         img_name = str(data_img['file_name'])
         image_id = data_img['id']
 
-        #         print(f"{img_name=}")
+        # print(f"{img_name=}")
 
         if self.keep and img_name in self.df['Image_Name'].values:
             target_name = self.df.loc[
@@ -420,14 +392,13 @@ class SchoolSegmentationDataset(Dataset):
         image = image.transpose(2, 0, 1)
         target = target.transpose(2, 0, 1).astype(np.float64)
 
-        target_dict = {
-            'binary': target[0:rbounds[0]],
-            'lines': target[rbounds[0]:rbounds[1]],
-            'border_mask': target[rbounds[1]:rbounds[2]],
-            'watershed': target[rbounds[2]:rbounds[3]],
-            'word_polygons': word_polygons,
-            'line_polygons': line_polygons
-        }
+        target_dict = {}
+        target_dict['binary'] = target[0:rbounds[0]]
+        target_dict['lines'] = target[rbounds[0]:rbounds[1]]
+        target_dict['border_mask'] = target[rbounds[1]:rbounds[2]]
+        target_dict['watershed'] = target[rbounds[2]:rbounds[3]]
+        target_dict['word_polygons'] = word_polygons
+        target_dict['line_polygons'] = line_polygons
 
         if self.keep:
             target_filename = f'{get_filename(img_name)}_target.gz'
