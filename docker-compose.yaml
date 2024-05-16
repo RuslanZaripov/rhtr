@@ -72,30 +72,30 @@ services:
     volumes:
       - shared-data:/rhtr/shared
 
-  flower:
-    build: .
-    container_name: rhtr-flower
-    environment:
-      - REDIS_HOST=backend
-      - REDIS_PORT=6379
-      - REDIS_DB=0
-      - REDIS_PASS=password
-      - RABBITMQ_HOST=broker
-      - RABBITMQ_PORT=5672
-      - RABBITMQ_USER=guest
-      - RABBITMQ_PASS=guest
-    command: celery -A worker.rhtr.rhtr_celery flower
-    ports:
-      - "5555:5555"
-    links:
-      - broker:broker
-      - backend:backend
-    networks:
-      - network
-    depends_on:
-      - broker
-      - backend
-      - recognizer
+#  flower:
+#    build: .
+#    container_name: rhtr-flower
+#    environment:
+#      - REDIS_HOST=backend
+#      - REDIS_PORT=6379
+#      - REDIS_DB=0
+#      - REDIS_PASS=password
+#      - RABBITMQ_HOST=broker
+#      - RABBITMQ_PORT=5672
+#      - RABBITMQ_USER=guest
+#      - RABBITMQ_PASS=guest
+#    command: celery -A worker.rhtr.rhtr_celery flower
+#    ports:
+#      - "5555:5555"
+#    links:
+#      - broker:broker
+#      - backend:backend
+#    networks:
+#      - network
+#    depends_on:
+#      - broker
+#      - backend
+#      - recognizer
 
 networks:
   network: { }
