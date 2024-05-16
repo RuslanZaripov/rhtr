@@ -161,6 +161,14 @@ def calculate_energy(pred_output, or_h=None, or_w=None):
     # pred_mask0 = cv2.resize(pred_mask0, (or_h, or_w), interpolation=cv2.INTER_LINEAR)
     # pred_distance = cv2.resize(pred_distance, (or_h, or_w), interpolation=cv2.INTER_LINEAR)
 
+    # plt.imshow(pred_mask3)
+    # plt.savefig(f'data/processed/boundary_mask.png')
+    # plt.clf()
+
+    # plt.imshow(pred_distance)
+    # plt.savefig(f'data/processed/thresh_binary_masl.png')
+    # plt.clf()
+
     # predict average energy by summing all the masks up
     pred_energy = (pred_mask + pred_mask1 + pred_mask2 + pred_mask0) / 4 * 255
     pred_mask = np.copy(pred_mask)

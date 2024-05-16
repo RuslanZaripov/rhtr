@@ -45,12 +45,27 @@ def val_loop(data_loader, model, criterion, device, epoch, class_names, logger, 
     strat_time = time.time()
 
     tqdm_data_loader = tqdm(data_loader, total=len(data_loader), leave=False)
-    for images, targets in tqdm_data_loader:
+    for idx, images, targets in enumerate(tqdm_data_loader):
         preds, targets = predict(images, model, device, targets)
         batch_size = len(images)
 
         thresh_binary = preds[:, -1:, :, :]
         preds = preds[:, :-1, :, :]
+
+        # if idx == 0:
+        #     save_dir = f'/kaggle/working/images/{epoch}'
+        #     os.makedirs(save_dir, exist_ok=True)
+        #
+        #     import matplotlib.pyplot as plt
+        #     # draw plots with a thresh_binary
+        #     plt.imshow(thresh_binary[0, :, :, :].permute(1, 2, 0).cpu().detach().numpy())
+        #     plt.savefig(os.path.join(save_dir, 'thresh_binary.jpg'))
+        #     # draw preds for firsct batch
+        #     # on one plot
+        #     for i in range(preds.shape[1]):
+        #         plt.imshow(preds[0, i, :, :].cpu().detach().numpy())
+        #         plt.savefig(os.path.join(save_dir, f'pred_{i}.jpg'))
+
         loss = criterion(preds, targets) + dice_loss(thresh_binary, targets[:, 0, :, :])
 
         loss_avg.update(loss.item(), batch_size)

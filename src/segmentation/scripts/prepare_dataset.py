@@ -183,12 +183,29 @@ def get_preprocessed_sample(config: src.segmentation.config.Config, image_id, da
         categories_ids = class_names2id(params['annotation_classes'], data)
         polygons = get_class_polygons(image_id, data, image, categories_ids)
         polygons = polygon_resize(polygons, img_h, img_w, new_img_h, new_img_w)
+
+        # draw image above polygon to check if it's correct
+        # copy_image = image.copy()
+        # for idx, polygon in enumerate(polygons):
+        #     if idx > 3: break
+        #     cv2.polylines(copy_image, [polygon], True, (0, 255, 0), 2)
+        #
+        # cv2.imshow('test.jpg', copy_image)
+        # cv2.waitKey(0)
+
         # convert polygon to mask
         mask = polygons
         for process_name, process_args in params['polygon2mask'].items():
             mask = PREPROCESS_FUNC[process_name](
                 mask, new_img_h, new_img_w, **process_args)
         class_masks.extend(mask.reshape(-1, mask.shape[-2], mask.shape[-1]))
+
+        # draw mask above image to check if it's correct
+        # copy_image = image.copy()
+        # for mask in class_masks:
+        #     copy_image[mask > 0] = (0, 255, 0)
+        # cv2.imshow('test.jpg', copy_image)
+        # cv2.waitKey(0)
 
     # stack class masks to target
     target = np.stack(class_masks, -1)
