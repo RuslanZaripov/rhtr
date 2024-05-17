@@ -11,6 +11,8 @@ from torchvision.models.resnet import \
     resnet152
 from torch.nn import Conv2d
 
+from src.segmentation.config import Config
+
 nonlinearity = nn.ReLU
 
 ENCODERS = {
@@ -23,8 +25,13 @@ ENCODERS = {
 
 
 class DecoderBlock(nn.Module):
-    def __init__(self, in_channels, n_filters):
+    def __init__(self,
+                 train_config: Config,
+                 in_channels,
+                 n_filters):
         super().__init__()
+
+        self.train_config = train_config
 
         # B, C, H, W -> B, C/4, H, W
         self.conv1 = nn.Conv2d(in_channels, in_channels // 4, 1)
@@ -129,12 +136,18 @@ class LinkResNet(nn.Module):
 
         out = self.sigmoid(f5.to(dtype=torch.float64))
 
-        # TODO: change bounds for masks
         result = {}
-        result['binary'] = out[:, 0:1]
-        result['lines'] = out[:, 1:2]
-        result['border_mask'] = out[:, 2:3]
-        result['watershed'] = out[:, 3:13]
+        next_bound = 0
+        for key, value in self.train_config.get_masks().items():
+
+            mask_len = 0
+            if isinstance(value, int):
+                mask_len = 1
+            elif isinstance(value, list):
+                mask_len = len(value)
+
+            result[key] = out[:, next_bound:(next_bound + mask_len)]
+            next_bound += mask_len
 
         return result
 

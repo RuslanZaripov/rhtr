@@ -14,6 +14,7 @@ from torch.utils.data import Dataset
 
 from src.segmentation.predictor import is_valid_polygon, rescale_contour
 from src.segmentation.utils import get_filename, delete_and_create_dir
+from src.segmentation.config import Config
 
 print(f"{multiprocessing.cpu_count()=}")
 semaphore = multiprocessing.Semaphore(multiprocessing.cpu_count() - 1)
@@ -31,6 +32,7 @@ class SchoolSegmentationDataset(Dataset):
 
     def __init__(
             self,
+            train_config: Config,
             json_annotations_path,
             image_root,
             save_dir_path,
@@ -48,6 +50,7 @@ class SchoolSegmentationDataset(Dataset):
         :param df_path: Path to the dataframe with processed data.
         :param keep: If True, the processed data will be stored cached.
         """
+        self.train_config = train_config
 
         self.image_root = image_root
         with open(json_annotations_path, 'r') as f:
@@ -81,7 +84,6 @@ class SchoolSegmentationDataset(Dataset):
         if self.keep and df_path is None:
             root_ext = get_filename(json_annotations_path)
 
-            # TODO: change notebook root dir
             self.processed_data_dir = f'{save_dir_path}/{root_ext}'
             self.target_dir = 'target'
             self.processed_images_dir = 'image'
@@ -299,43 +301,27 @@ class SchoolSegmentationDataset(Dataset):
         polygons = self.get_class_polygons(image_id, self.text_category_ids)
         line_polygons = self.get_class_polygons(image_id, self.line_category_ids)
 
-        watershed_energy_map = self.get_watershed_map(
-            polygons,
-            image_shape,
-            list(np.linspace(0.1, 1, num=10, endpoint=True))
-        )
+        def mask_factory(source):
+            factory = {
+                'binary': lambda r: self.get_watershed_map(polygons, image_shape, shrink_range=r),
+                'lines': lambda th: self.get_lines_map(line_polygons, image_shape, thickness=th),
+                'border_mask': lambda r: self.get_border_map(polygons, image_shape, shrink_range=r),
+                'watershed': lambda r: self.get_watershed_map(polygons, image_shape, shrink_range=r)
+            }
+            return factory[source]
 
-        binary_mask = self.get_watershed_map(
-            polygons,
-            image_shape,
-            [1.0]
-        )
-
-        border_mask = self.get_border_map(
-            polygons,
-            image_shape,
-            [0.5]
-        )
-
-        lines_map = self.get_lines_map(
-            line_polygons,
-            image_shape,
-            thickness=5
-        )
-
-        # distance_mask = self.get_distance_mask(polygons, image_shape)
-
-        masks = (binary_mask, lines_map, border_mask, watershed_energy_map)
-
+        masks: (np.ndarray,) = ()
         rbounds = [0]
-        for mask in masks:
+        for key, value in self.train_config.get_masks().items():
+            mask: np.ndarray = mask_factory(key)(value)
             rbounds.append(rbounds[-1] + mask.shape[0])
+            masks += (mask,)
 
         target = np.concatenate(masks, axis=0)
 
         target = np.transpose(target, (1, 2, 0))
 
-        return target, [polygons, line_polygons], rbounds[1:]
+        return target, [polygons, line_polygons], rbounds
 
     def __getitem__(self, idx):
         data_img = self.data['images'][idx]
@@ -373,16 +359,18 @@ class SchoolSegmentationDataset(Dataset):
         word_polygons = polygons[0]
         line_polygons = polygons[1]
 
+        target_h, target_w = self.train_config.get_image('height'), self.train_config.get_image('width')
+
         # apply transforms
         if self.transform is not None:
             word_polygons = [rescale_contour(polygon,
                                              image.shape[0], image.shape[1],
-                                             768, 768)
+                                             target_h, target_w)
                              for polygon in polygons[0]]
 
             line_polygons = [rescale_contour(polygon,
                                              image.shape[0], image.shape[1],
-                                             768, 768)
+                                             target_h, target_w)
                              for polygon in polygons[1]]
 
             transformed = self.transform(image=image, mask=target)
@@ -393,10 +381,8 @@ class SchoolSegmentationDataset(Dataset):
         target = target.transpose(2, 0, 1).astype(np.float64)
 
         target_dict = {}
-        target_dict['binary'] = target[0:rbounds[0]]
-        target_dict['lines'] = target[rbounds[0]:rbounds[1]]
-        target_dict['border_mask'] = target[rbounds[1]:rbounds[2]]
-        target_dict['watershed'] = target[rbounds[2]:rbounds[3]]
+        for idx, key in enumerate(self.train_config.get_masks().keys()):
+            target_dict[key] = target[rbounds[idx]:rbounds[idx + 1]]
         target_dict['word_polygons'] = word_polygons
         target_dict['line_polygons'] = line_polygons
 
