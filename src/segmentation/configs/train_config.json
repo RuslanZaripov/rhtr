@@ -6,7 +6,7 @@
     "masks": {
         "binary": [1.0],
         "lines": 5,
-        "border_mask": null,
+        "border_mask": [0.5],
         "watershed": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
     }
 }
