@@ -427,9 +427,8 @@ def dynamic_length_collate(batch):
         for key, value in target_dict.items():
             targets[key].append(value)
 
-    targets['lines'] = torch.tensor(np.array(targets['lines']))
-    targets['binary'] = torch.tensor(np.array(targets['binary']))
-    targets['border_mask'] = torch.tensor(np.array(targets['border_mask']))
-    targets['watershed'] = torch.tensor(np.array(targets['watershed']))
+    for key, value in targets.items():
+        if 'polygons' in key: continue
+        targets[key] = torch.tensor(np.array(value))
 
     return images, targets
