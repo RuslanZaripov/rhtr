@@ -86,8 +86,14 @@ def accuracy(y_pred, y_true, eps=1e-7):
 
 
 def f1_score(y_pred, y_true, eps=1e-7):
-    p = precision(y_pred, y_true)
-    r = recall(y_pred, y_true)
+    tp = (y_true * y_pred).sum().to(torch.float32)
+    fp = ((1 - y_true) * y_pred).sum().to(torch.float32)
+    p = tp / (tp + fp + eps)
+
+    tp = (y_true * y_pred).sum().to(torch.float32)
+    fn = (y_true * (1 - y_pred)).sum().to(torch.float32)
+    r = tp / (tp + fn + eps)
+
     f1 = 2 * p * r / (p + r + eps)
     return f1.item()
 
