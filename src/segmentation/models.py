@@ -26,12 +26,9 @@ ENCODERS = {
 
 class DecoderBlock(nn.Module):
     def __init__(self,
-                 train_config: Config,
                  in_channels,
                  n_filters):
         super().__init__()
-
-        self.train_config = train_config
 
         # B, C, H, W -> B, C/4, H, W
         self.conv1 = nn.Conv2d(in_channels, in_channels // 4, 1)
@@ -63,11 +60,13 @@ class DecoderBlock(nn.Module):
 
 
 class LinkResNet(nn.Module):
-    def __init__(self, input_channels=3, output_channels=1, dropout2d_p=0.5,
+    def __init__(self, train_config: Config, input_channels=3, output_channels=1, dropout2d_p=0.5,
                  pretrained=True, encoder='resnet50'):
         assert input_channels > 0
         assert encoder in ENCODERS
         super().__init__()
+
+        self.train_config = train_config
 
         if encoder in ['resnet18', 'resnet34']:
             filters = [64, 128, 256, 512]
