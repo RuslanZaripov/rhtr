@@ -313,7 +313,6 @@ class SchoolSegmentationDataset(Dataset):
         masks: (np.ndarray,) = ()
         rbounds = [0]
         for key, value in self.train_config.get_masks().items():
-            if value is None: continue
             mask: np.ndarray = mask_factory(key)(value)
             rbounds.append(rbounds[-1] + mask.shape[0])
             masks += (mask,)
