@@ -20,10 +20,14 @@ RUN pip3 install opencv-python-headless==4.8.0.74
 
 RUN pip3 install flower
 
-COPY /models/segmentation/linknet-7.onnx /rhtr/models/segmentation/linknet-7.onnx
+# Remember to copy necessary models inside docker container
+COPY /models/segmentation/linknet_12_2.onnx /rhtr/models/segmentation/linknet_12_2.onnx
 
 COPY /backend/worker /rhtr/worker
 
 COPY /src/pipeline /rhtr/src/pipeline
+COPY /src/segmentation /rhtr/src/segmentation
 
 RUN touch /rhtr/src/__init__.py
+
+RUN mkdir "images" # create directory to store images for debugging

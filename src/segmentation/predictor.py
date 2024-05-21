@@ -1,4 +1,6 @@
 import cv2
+import matplotlib.pyplot as plt
+from src.segmentation.utils import colorize
 import numpy as np
 import pyclipper
 import torch
@@ -17,16 +19,13 @@ def is_valid_polygon(polygon):
     return polygon.length >= 1 and polygon.area > 0
 
 
-def calculate_energy(pred_output: torch.Tensor):
-    pred_watershed = pred_output.data.cpu().numpy()
-    pred_energy = np.mean(pred_watershed, axis=0)
-    pred_mask = np.copy(pred_watershed[-1])
+def calculate_energy(pred_output):
+    pred_energy = np.mean(pred_output, axis=0)
+    pred_mask = np.copy(pred_output[-1])
     return pred_mask, pred_energy
 
 
 def get_contours_from_mask(mask):
-    mask = np.squeeze(mask, axis=0)
-
     contours, hierarchy = cv2.findContours(mask.astype(np.uint8),
                                            cv2.RETR_LIST,
                                            cv2.CHAIN_APPROX_SIMPLE)
@@ -55,13 +54,21 @@ def rescale_contour(contour, pred_height, pred_width, image_height, image_width)
     return contour
 
 
-def process_class_contours(pred_class: torch.Tensor, image, threshold):
+def process_class_contours(pred_class, image, threshold):
+    """image and pred_class format should be (C, H, W)"""
+    assert image.shape[0] == 3 or image.shape[0] == 1, "Channel should be first in image"
+    assert pred_class.shape[0] == 1, "Channel should be first in pred_class mask"
+
     img_h, img_w = image.shape[1:]
     pred_h, pred_w = pred_class.shape[1:]
 
-    pred_class = pred_class > threshold
+    pred_class = np.squeeze(pred_class, axis=0)
 
-    pred_class = pred_class.detach().cpu().numpy()
+    # plt.imshow(colorize(pred_class))
+    # plt.savefig('images/lines.png')
+    # plt.clf()
+
+    pred_class = pred_class > threshold
 
     contours = get_contours_from_mask(pred_class)
 
@@ -138,7 +145,8 @@ def energy_baseline(last_msk, energy):
     # fig.add_subplot(1, 3, 3)
     # plt.imshow(energy_ths)
 
-    # plt.show()
+    # plt.savefig('images/energy_baseline.png')
+    # plt.clf()
 
     # distance = ndi.distance_transform_edt(msk_ths)
     distance = energy
@@ -154,10 +162,20 @@ def energy_baseline(last_msk, energy):
 
 
 def process_watershed(watershed_masks, image):
+    """watershed_masks and image format should be (C, H, W)"""
+    assert image.shape[0] == 3 or image.shape[0] == 1, "Image should have 1 or 3 channels."
+    # TODO: assert watershed_masks shape is (C, H, W)
+
+    # image and watershed_masks should have following shape structure (C, H, W)
     img_h, img_w = image.shape[1:]
     pred_h, pred_w = watershed_masks.shape[1:]
 
     pred_mask, energy = calculate_energy(watershed_masks)
+
+    # import matplotlib.pyplot as plt
+    # plt.imshow(energy)
+    # plt.savefig("images/energy.png")
+    # plt.clf()
 
     labels = energy_baseline(pred_mask, energy)
 
@@ -238,14 +256,14 @@ def get_watershed_predictions(images, predictions, threshold=0.5):
                 {
                     'polygon': b_contour,
                     'bbox': b_bbox,
-                    'class_name': 'handwritten_text'
+                    'class_name': 'handwritten_text_shrinked_mask1'
                 }
             )
 
         line_contours = process_class_contours(
             predictions['lines'][batch_idx],
             images[batch_idx],
-            threshold)
+            threshold=0.25)
 
         for l_contour, l_bbox in line_contours:
             pred_img['predictions'].append(

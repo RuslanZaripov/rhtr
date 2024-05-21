@@ -14,6 +14,6 @@ models.zip
 notebooks
 external_notebooks
 references
-requirements.txt
 
 backend/client/
+src/segmentation/previous/

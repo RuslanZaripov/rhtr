@@ -2,10 +2,8 @@
     "pipeline": {
         "WordSegmentation": {
             "model_name": "UNet",
-            "model_path": "models/segmentation/linknet-7.onnx"
-        },
-        "RestoreImageAngle": {
-            "restoring_class_names": ["handwritten_text_shrinked_mask1"]
+            "model_path": "models/segmentation/linknet_12_2.onnx",
+            "config_path": "src/segmentation/configs/train_config.json"
         },
         "ContourPostprocessors": {
             "class2postprocessors": {

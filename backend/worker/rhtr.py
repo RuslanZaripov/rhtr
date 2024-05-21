@@ -1,5 +1,6 @@
 import os
 from os import getenv
+import traceback
 
 import cv2
 import numpy as np
@@ -50,23 +51,36 @@ def process_image(self, uuid):
         return {"x": x1, "y": y1, "width": x2 - x1, "height": y2 - y1}
 
     image = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     print(f"Image of size {image.shape=} accepted by worker")
 
-    rotated_image, data = predictor.predict(image)
+    try:
+        rotated_image, data = predictor.predict(image)
+    except Exception as e:
+        message = f"Document wasn't processed. Error occured: {e}\n{traceback.format_exc(chain=False)}"
+        self.update_state(
+            state=states.SUCCESS,
+            meta={'words': [{"word": message, "rect": (0, 0, 0, 0)}]}
+        )
 
-    filtered_words = filter(
+    filtered_words = list(filter(
         lambda prediction: prediction['class_name'] in predictor.get_prediction_classes(),
         data['predictions']
-    )
+    ))
 
     # print(f"{data['predictions'][0].keys()=}")
 
+    word_count = len(filtered_words)
+    print(f"{word_count=}")
+
     # # Sorting by word_idx
-    # sorted_predictions = sorted(filtered_words, key=lambda prediction: prediction['word_idx'])
+    sorted_predictions = sorted(
+        filtered_words,
+        key=lambda prediction: prediction['word_idx'] if 'word_idx' in prediction.keys() else word_count)
 
     result = {
         "words": [{"word": prediction['text'], "rect": bbox2xywh(prediction['bbox'])}
-                  for prediction in filtered_words]
+                  for prediction in sorted_predictions]
     }
     print(f"{result=}")
 

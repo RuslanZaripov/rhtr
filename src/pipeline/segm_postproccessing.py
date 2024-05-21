@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 
+from src.segmentation.predictor import upscale_contour
+
 
 class BboxFromContour:
     @staticmethod
@@ -52,12 +54,22 @@ class BboxCropper:
         return crop, bbox, contour
 
 
+class PolygonUpscaler:
+    def __init__(self, upscale_ratio):
+        self.upscale_ratio = upscale_ratio
+
+    def __call__(self, image, crop, bbox, contour):
+        contour = upscale_contour(contour, self.upscale_ratio)
+        return crop, bbox, contour
+
+
 class ContourPostprocessors:
     """Class to handle postprocess functions for bboxs and contours."""
     CONTOUR_PROCESS_DICT = {
         "BboxFromContour": BboxFromContour,
-        "UpscaleBbox": BboxUpscaler,  # TODO: remove upscaler from config
+        "UpscaleBbox": BboxUpscaler,
         "CropByBbox": BboxCropper,
+        "UpscaleContour": PolygonUpscaler,
     }
 
     def __init__(self, args):
