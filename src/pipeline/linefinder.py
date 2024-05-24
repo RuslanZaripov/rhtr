@@ -17,7 +17,8 @@ def contour2shapely(contour):
 
 
 def add_polygon_center(predictions):
-    """Add center coords for each polygon in the predictions-dict.
+    """
+    Add center coords for each polygon in the predictions-dict.
     """
     for idx, prediction in enumerate(predictions['predictions']):
         contour = prediction['rotated_polygon'] if 'rotated_polygon' in prediction.keys() else prediction['polygon']
@@ -35,27 +36,25 @@ def add_polygon_center(predictions):
 
 
 def is_pages_swapped(cluster_centers):
-    """Check if page X clusters not sorted.
+    """
+    Check if page X clusters not sorted.
     Args:
         cluster_centers: list of 2d coordinates
     """
     return cluster_centers[0][0] > cluster_centers[1][0]
 
 
-def has_two_pages(cluster_centers, img_w, max_diff=.25):
+def has_two_pages(cluster_centers, img_w, max_diff):
     """
     Check if there are two pages on the image by comparing distance between K-means clusters of the image lines.
     """
     center1 = cluster_centers[0][0]
     center2 = cluster_centers[1][0]
-    dist = center2 - center1
-    diff_ratio = abs(dist) / img_w
+    diff_ratio = abs(center2 - center1) / img_w
     return diff_ratio >= max_diff
 
 
-def add_page_idx_for_lines(
-        predictions, line_class_names, img_w, pages_clust_dist=.25
-):
+def add_page_idx_for_lines(predictions, line_class_names, img_w, pages_clust_dist=.15):
     """
     Add page indexes for each contour in the pred_img-dict.
     Page is predicted using K-Means via line polygons.
@@ -72,24 +71,26 @@ def add_page_idx_for_lines(
     if len(x_coords) >= 2:
         X = np.array(x_coords).reshape(-1, 1)
         kmeans = KMeans(n_clusters=2, random_state=0).fit(X)
+        y_kmeans = kmeans.predict(X)
+
+        # plt.scatter(X[:, 0], np.zeros_like(X[:, 0]), c=y_kmeans, s=50, cmap='viridis')
+        # plt.savefig(f'images/lines_clustering.png')
+        # plt.clf()
 
         if has_two_pages(kmeans.cluster_centers_, img_w, pages_clust_dist):
-            if is_pages_swapped(kmeans.cluster_centers_):
-                page_indexes = [0 if page == 1 else 1 for page in kmeans.labels_]
-            else:
-                page_indexes = [int(page) for page in kmeans.labels_]
+            page_indexes = [1 - int(page)
+                            if is_pages_swapped(kmeans.cluster_centers_)
+                            else int(page)
+                            for page in kmeans.labels_]
 
     for idx, page_idx in zip(indexes, page_indexes):
         predictions['predictions'][idx]['page_idx'] = page_idx
 
 
 def add_line_idx_for_lines(pred_img, line_class_names):
-    """Add line indexes for line contours in the pred_img-dict.
+    """
+    Add line indexes for line contours in the pred_img-dict.
     Line index is calculated by sorting line contours by their y-mean coords.
-
-    Args:
-        pred_img (dict): The dictionary with predictions.
-        line_class_names (list): The list of line class names.
     """
     for page_idx in get_page_indexes(pred_img):
         y_means = []
@@ -111,41 +112,30 @@ def get_polygons_distance(polygon1, polygon2):
     """
     Get distance between two polygons.
     """
-    if polygon1 is not None and polygon2 is not None:
-        return polygon1.distance(polygon2)
-    return None
-
-
-def get_polygons_closest_points(contour1, contour2):
-    """
-    Get the closest points between two polygons.
-    """
-    polygon1 = contour2shapely(contour1)
-    polygon2 = contour2shapely(contour2)
-    if polygon1 is not None and polygon2 is not None:
-        return [(geom.xy[0][0], geom.xy[1][0])
-                for geom in nearest_points(polygon1, polygon2)]
-    return None
+    if polygon1 is None or polygon2 is None: return None
+    return polygon1.distance(polygon2)
 
 
 def get_idx_of_line_closest_to_word(word_contour, pred_img, line_class_names):
-    """Get the index of the line closest to the input word contour.
+    """
+    Get the index of the line closest to the input word contour.
 
     Args:
         word_contour (list of [x, y] coords): The contour of the word.
         pred_img (dict): The dictionary with predictions.
         line_class_names (list): The list of line class names.
     """
-    min_polygon_distance = np.inf
-    idx_of_line = None
-    word_shapely = contour2shapely(word_contour)
-
     indexes = []
     line_shapelys = []
     for idx, prediction in enumerate(pred_img['predictions']):
         if prediction['class_name'] in line_class_names:
             indexes.append(idx)
-            line_shapelys.append(contour2shapely(prediction['polygon']))
+            line_shapely = contour2shapely(prediction['polygon'])
+            line_shapelys.append(line_shapely)
+
+    min_polygon_distance = np.inf
+    idx_of_line = None
+    word_shapely = contour2shapely(word_contour)
 
     for idx, line_shapely in zip(indexes, line_shapelys):
         polygons_distance = get_polygons_distance(line_shapely, word_shapely)
@@ -157,14 +147,6 @@ def get_idx_of_line_closest_to_word(word_contour, pred_img, line_class_names):
                 idx_of_line = idx
 
     return min_polygon_distance, idx_of_line
-
-
-def is_word_above_line(line_center, word_center):
-    """Check if the word is above the line by comparing their central
-    coords."""
-    if word_center[1] <= line_center[1]:
-        return True
-    return False
 
 
 def add_line_idx_for_words(predictions, line_class_names, word_class_names):
@@ -179,7 +161,7 @@ def add_line_idx_for_words(predictions, line_class_names, word_class_names):
             dist, idx = get_idx_of_line_closest_to_word(
                 prediction['polygon'], predictions, line_class_names)
 
-            if idx is not None and dist == 0:
+            if idx is not None:
                 prediction['page_idx'] = predictions['predictions'][idx]['page_idx']
                 prediction['line_idx'] = predictions['predictions'][idx]['line_idx']
 
@@ -310,7 +292,7 @@ def complex_ordering(pred_img):
         pred_img['predictions'][centroid[0]]['word_idx'] = word_idx
 
 
-def visualize_ordering(image, pred_img, classes, idx_name):
+def visualize_ordering(image, pred_img, classes, idx_name, filename=None):
     image_copy = image.copy()
 
     for prediction in pred_img['predictions']:
@@ -338,7 +320,7 @@ def visualize_ordering(image, pred_img, classes, idx_name):
                 (prediction['polygon_center'][0], prediction['polygon_center'][1]),
                 fontsize=7)
 
-    plt.savefig(f'images/word_ordering_{idx_name}.png')
+    plt.savefig(f'images/word_ordering_{idx_name}.png' if filename is None else filename)
     plt.clf()
 
 
@@ -373,7 +355,7 @@ class LineFinder:
 
         add_line_idx_for_words(pred_img, self.line_classes, self.text_classes)
 
-        # visualize_ordering(image, pred_img, self.text_classes, 'line_idx')
+        # visualize_ordering(image, pred_img, self.text_classes, 'line_idx', 'images/word_ordering_line_idx_1.png')
 
         add_column_idx_for_words(pred_img, self.text_classes)
 
