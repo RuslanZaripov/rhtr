@@ -1,6 +1,7 @@
 import os
 from os import getenv
 import traceback
+import sys
 
 import cv2
 import numpy as np
@@ -57,11 +58,19 @@ def process_image(self, uuid):
     try:
         rotated_image, data = predictor.predict(image)
     except Exception as e:
-        message = f"Document wasn't processed. Error occurred: {e}\n{traceback.format_exc(chain=False)}"
+        etype, value, tb = sys.exc_info()
+        stacktrace = "".join(traceback.format_exception(etype, value, tb))
+
+        message = f"Document wasn't processed.\nError occurred: {e}\n{stacktrace}"
+
+        result = {'words': [{"word": message, "rect": (0, 0, 0, 0)}]}
+
         self.update_state(
             state=states.SUCCESS,
-            meta={'words': [{"word": message, "rect": (0, 0, 0, 0)}]}
+            meta=result
         )
+
+        return result
 
     filtered_words = list(filter(
         lambda prediction: prediction['class_name'] in predictor.get_prediction_classes(),
@@ -84,6 +93,6 @@ def process_image(self, uuid):
     }
     print(f"{result=}")
 
-    self.update_state(state=states.SUCCESS, meta={'words': result['words']})
+    self.update_state(state=states.SUCCESS, meta=result)
 
     return result
