@@ -31,7 +31,7 @@ rsync -chavzP --stats -e "ssh -p 2201" ./models/segmentation/linknet-7.onnx rzar
 
 - remember to specify nessecary models path inside worker Dockerfile `rhtr/Dockerfile`
 
-# Запуск
+# Setup
 
 - run and stop serivce can be done by using commands below
 

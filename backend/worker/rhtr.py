@@ -57,7 +57,7 @@ def process_image(self, uuid):
     try:
         rotated_image, data = predictor.predict(image)
     except Exception as e:
-        message = f"Document wasn't processed. Error occured: {e}\n{traceback.format_exc(chain=False)}"
+        message = f"Document wasn't processed. Error occurred: {e}\n{traceback.format_exc(chain=False)}"
         self.update_state(
             state=states.SUCCESS,
             meta={'words': [{"word": message, "rect": (0, 0, 0, 0)}]}
