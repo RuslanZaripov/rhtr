@@ -71,6 +71,7 @@ services:
       - backend
     volumes:
       - shared-data:/rhtr/shared
+      - ./data/images:/rhtr/images # not to copy images from the container
 
 #  flower:
 #    build: .
