@@ -1,45 +1,47 @@
-# Процесс распознавания
+# Recognition process
 
-## Описание структуры
+- Read this in other languages: [Russian](README.ru.md)
 
-Примечание: поскольку это мой первый проект подобного рода, то структура проекта, возможно, не очень удобная.
-То же самое относится и к коду проекта. Я его использовал в таком виде, в котором он сейчас находится.
-Его вполне можно использовать как основу для разработки своего собственного решения.
+## Structure description
 
-- `abstract.py` - содержит абстрактные классы модулей распознавания для обобщения структуры кода
-- `anglerestorer.py` - содержит код для вычисления угла поворота картинки
-- `config.py` - содержит код необходимый для обработки файла конфигурации
-- `linefinder.py` - содержит код необходимый для компоновки фрагментов текста
-- `ocr_recognition.py` - содержит код для инициализации этапа распознавания
-    - метод `recognizer_factory` отвечает за выбор модели на основе файлы конфигурации
-- `word_segmentation.py` - содержит код для инициализации этапа сегментации
-    - метод `segmentation_factory` отвечает за выбор модели на основе файла конфигурации
-- `segm_postprocessing.py` - содержит код для инициализации этапа постобработки контуров
-- `tr_ocr.py` - содержит код для модели распознавания натренированной библиотекой `transformers`
-- `unet.py` - содержит код модели сегментации натренированной в модуле `segmentation`
-- `utils.py` - содержит вспомогательный код процесса распознавания (визуализация, расчеты показателей)
-- `scripts/pipeline_config.json` - пример файла конфигурации
-- `scripts/evaluate.ipynb` - код запуска
+Note: since this is my first project of this kind, the project structure may not be very convenient.
+The same applies to the project code. I used it in the form in which it is now.
+It can be used as a basis for developing your own solution.
 
-Пример того, как выглядит файл конфигурации процесса распознавания:
+- `abstract.py` - contains abstract classes of recognition modules to generalize the code structure
+- `anglerestorer.py` - contains code for calculating the angle of rotation of the image
+- `config.py` - contains the code necessary to process the configuration file
+- `linefinder.py` - contains the code necessary for composing text fragments
+- `ocr_recognition.py` - contains code to initialize the recognition stage
+- the `recognizer_factory` method is responsible for selecting a model based on configuration files
+- `word_segmentation.py` - contains code to initialize the segmentation stage
+- the `segmentation_factory` method is responsible for selecting a model based on the configuration file
+- `segm_postprocessing.py` - contains code for initializing the contour postprocessing stage
+- `tr_ocr.py` - contains code for the recognition model trained by the `transformers` library
+- `unet.py` - contains the code of the segmentation model trained in the `segmentation` module
+- `utils.py` - contains auxiliary code for the recognition process (visualization, calculations of indicators)
+- `scripts/pipeline_config.json` - example configuration file
+- `scripts/evaluate.ipynb` - launch code example
 
-- В этап сегментации `WordSegmentation` указывается название модели из метода `segmentation_factory`,
-  путь к файлу с весами, путь к файлу конфигурации тренировочного процесса.
-- После этапа сегментации указываются параметры модуля отработки результатов сегментации.
-  С вариантами постобработки можно ознакомиться в файле `segm_postprocessing.py`.
-  Ниже указан пример использования. Пишется название класса масок и модули обработки к нему.
-  Важно соблюдать порядок.
-- В этап распознавания `OpticalCharacterRecognition` указывается название модели из метода `recognizer_factory`,
-  путь к директории или файлу с весами, название классов для распознавания.
-- В этап компоновки указываются названия классов слов и линий.
+An example of what the recognition process configuration file looks like:
+
+- The `WordSegmentation` segmentation stage specifies the name of the model from the `segmentation_factory` method, 
+  the path to the file with weights, and the path to the training process configuration file.
+- After the segmentation stage, the parameters of the module for processing segmentation results are indicated.
+  Postprocessing options can be found in the `segm_postprocessing.py` file. Below is an example of use. 
+  The name of the mask class and processing modules for it are written. 
+  It is important to maintain order.
+- The `OpticalCharacterRecognition` recognition stage specifies the name of the model from the `recognizer_factory` method, 
+  the path to the directory or file with the weights, and the name of the classes to be recognized.
+- At the layout stage, the names of the word and line classes are specified.
 
 ```json
 {
     "pipeline": {
         "WordSegmentation": {
             "model_name": "UNet",
-            "model_path": "models/segmentation/${название_файла_весов}.onnx",
-            "config_path": "src/segmentation/configs/${название_файла_конфигурации}.json"
+            "model_path": "models/segmentation/${weights_filename}.onnx",
+            "config_path": "src/segmentation/configs/${config_filename}.json"
         },
         "ContourPostprocessors": {
             "class2postprocessors": {
@@ -65,9 +67,12 @@
 }
 ```
 
-# Как я запускаю процесс распознавания?
+# How do I start the recognition process?
 
-- Пример работы написан в файле `src/pipeline/scripts/evaluate.ipynb`
-- Скачать веса можно по ссылке `https://disk.yandex.ru/d/rxlpAgiTJYWrjA`
-- Кладем веса в папку `rhtr/models/segmentation` и указываем путь в конфиге `src/pipeline/scripts/pipeline_config.json`
-- Лучше для запуска воспользоваться ноутбуком, открыв его на платформе kaggle.com
+- An example of work is written in the file `src/pipeline/scripts/evaluate.ipynb`
+- You can download the weights from the link `https://disk.yandex.ru/d/rxlpAgiTJYWrjA`
+  (it is recommended to make the same folder structure as in the link above).
+  The root directory is `/models` and the folders `ocr/` and `segmentation` inside.
+- Put the weights in the folder `rhtr/models/segmentation` and specify the path in the
+  config `src/pipeline/scripts/pipeline_config.json`
+- It’s better to use a jupyter to start, opening it on the kaggle.com platform
