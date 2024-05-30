@@ -48,7 +48,7 @@ class SchoolSegmentationDataset(Dataset):
         :param preprocessing: Preprocessing function.
         :param transform: Transform function.
         :param df_path: Path to the dataframe with processed data.
-        :param keep: If True, the processed data will be stored cached.
+        :param keep: If True, the processed data will be cached.
         """
         self.train_config = train_config
 

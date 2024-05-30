@@ -11,6 +11,7 @@ class Config:
         with open(config_path, 'r') as f:
             self.config = json.load(f)
 
+        # delete items with None values after loading in ctor
         for key, value in self.config['masks'].copy().items():
             if value is None:
                 del self.config['masks'][key]
