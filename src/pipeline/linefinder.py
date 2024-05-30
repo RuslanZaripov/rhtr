@@ -325,7 +325,8 @@ def visualize_ordering(image, pred_img, classes, idx_name, filename=None):
 
 
 class LineFinder:
-    """Heuristic methods to define indexes of rows, columns and pages for
+    """
+    Heuristic methods to define indexes of rows, columns and pages for
     polygons on the image.
 
     Args:

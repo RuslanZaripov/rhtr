@@ -84,9 +84,13 @@ class ContourPostprocessors:
             if prediction['class_name'] in self.class2postprocessors:
                 postprocessors = self.class2postprocessors[prediction['class_name']]
 
-                bbox = None if 'bbox' not in prediction else prediction['bbox']
+                bbox = None \
+                    if 'bbox' not in prediction \
+                    else prediction['bbox']
+                contour = prediction['rotated_polygon'] \
+                    if 'rotated_polygon' in prediction \
+                    else prediction['polygon']
                 crop = None
-                contour = prediction['rotated_polygon'] if 'rotated_polygon' in prediction else prediction['polygon']
 
                 for f in postprocessors:
                     crop, bbox, contour = f(image, crop, bbox, contour)

@@ -11,10 +11,10 @@ def recognizer_factory(args: dict) -> Recognizer:
         'TrOCR': TrOCR,
     }
     if source in factory:
-        recognoizer = factory[source]
-        params = get_constructor_params(recognoizer)
+        recognizer = factory[source]
+        params = get_constructor_params(recognizer)
         input_args = collect_params_from_dict(params, args)
-        return recognoizer(**input_args)
+        return recognizer(**input_args)
     else:
         raise ValueError(f"source {source} is not supported. Please pass a valid source.")
 

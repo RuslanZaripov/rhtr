@@ -5,7 +5,7 @@ import src.pipeline.config
 from src.pipeline.anglerestorer import ImageAngleRestorer
 from src.pipeline.linefinder import LineFinder
 from src.pipeline.ocr_recognition import OpticalCharacterRecognition
-from src.pipeline.segm_postproccessing import ContourPostprocessors
+from src.pipeline.segm_postprocessing import ContourPostprocessors
 from src.pipeline.word_segmentation import WordSegmentation
 
 
