@@ -13,5 +13,5 @@ train:
   epochs: 100
   batch_size: 64
 val:
-  csv_filename: 'val.tsv'
+  csv_filename: 'test.tsv'
   batch_size: 64
