@@ -9,9 +9,9 @@ optimizer:
 dataloader:
   num_workers: 0
 train:
-  csv_filename: 'train.csv'
+  csv_filename: 'train.tsv'
   epochs: 100
   batch_size: 64
 val:
-  csv_filename: 'val.csv'
+  csv_filename: 'val.tsv'
   batch_size: 64

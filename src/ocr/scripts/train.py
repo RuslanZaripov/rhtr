@@ -106,7 +106,7 @@ def get_data_loaders(config):
 def main(args):
     config = src.ocr.Config(args.config_path)
 
-    os.makedirs(config.get('save_dir'))
+    os.makedirs(config.get('save_dir'), exist_ok=True)
 
     log_path = os.path.join(config.get('save_dir'), 'train.log')
     logger = src.ocr.configure_logging(log_path)
