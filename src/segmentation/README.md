@@ -1,28 +1,31 @@
-# Модуль сегментации
+# Segmentation process
 
-## Описание структуры
+- Read this in other languages: [Russian](README.ru.md)
 
-Примечание: поскольку это мой первый проект подобного рода, то структура проекта, возможно, не очень удобная.
-То же самое относится и к коду проекта. Я его использовал в таком виде, в котором он сейчас находится.
-Его вполне можно использовать как основу для разработки своего собственного решения.
+# Structure description
 
-- `/configs` - папка, в которой хранятся json файлы с конфигурацией
-- `config.py` - код класса Config для чтения json файла с конфигурацией тренировки
-- `dataset.py` - код, используемый для предобработки изображений и генерации масок
-    - Если нужно использовать другой набор данных для тренировки, то лучше реализовать другой класс Dataset в этом файле
-- `losses.py` - содержит реализованные функции потерь для модуля сегментации
-    - Поскольку модель возвращает словарь из масок, то для вычисления функции потерь важно соблюдать формат вывода
-      модели
-- `metrics.py` - содержит метрики, использованные для оценки качества
-- `models.py` - содержит реализацию моделей используемых для сегментации - результатом модели является словарь исз
-  предсказанных масок
-- `predictor.py` - содержит методы для извлечения контуров и алгоритмы обработки контуров, в методах есть
-  закомментированные код, использованный для визуализации результатов
-- `preprocessing.py` - содержит методы предобработки изображений для модели сегментации
-- `utils.py` - содержит вспомогательные методы визуализации и расчета дополнительных показателей
-- `train.ipynb` - содержит код использованный для обучения моделей
+Note: since this is my first project of this kind, the project structure may not be very convenient.
+The same applies to the project code. I used it in the form in which it is now.
+It can be used as a basis for developing your own solution.
 
-Описание формата файлы конфигурации на текущий момент:
+- `/configs` - folder where json files with configuration are stored
+- `config.py` - code of the Config class for reading the json file with the training configuration
+- `dataset.py` - code used for image preprocessing and mask generation
+- If you need to use a different data set for training, then it is better to implement another Dataset class in this
+  file
+- `losses.py` - contains implemented loss functions for the segmentation module
+- Since the model returns a dictionary of masks, it is important to respect the model output format to calculate the
+  loss function
+- `metrics.py` - contains metrics used to evaluate quality
+- `models.py` - contains the implementation of models used for segmentation - the result of the model is a dictionary of
+  predicted masks
+- `predictor.py` - contains methods for extracting contours and algorithms for processing contours, the methods contain
+  commented out code used to visualize the results
+- `preprocessing.py` - contains image preprocessing methods for the segmentation model
+- `utils.py` - contains auxiliary methods for visualization and calculation of additional indicators
+- `train.ipynb` - contains the code used to train the models
+
+Description of the current configuration files format:
 
 ```json
 {
@@ -39,19 +42,19 @@
 }
 ```
 
-В параметре "image" пишутся значения, к которым будут приводиться все входящие изображения
+The "image" parameter contains the values to which all incoming images will be converted
 
-В параметре "masks" пишутся маски, которые будут использоваться в модели.
-Очень важно соблюдать порядок, поскольку на протяжении всего пайплайна генерируется словарь со схожим форматом.
-Название маски может быть любое. Главное помнить, как к ней обращаться.
-Прежде, чем редактировать код, лучше изучить как осуществляется весь процесс обучения.
+The "masks" parameter contains the masks that will be used in the model.
+It is very important to maintain order, since a dictionary with a similar format is generated throughout the pipeline.
+The name of the mask can be anything. The main thing is to remember how to address it.
+Before editing the code, it is better to study how the entire learning process is carried out.
 
-## Как я обучал модели?
+## How did I train the models?
 
-- Поскольку локально я не имею GPU, то я использовал платформу kaggle.com
-- На платформе kaggle.com я открывал ноутбук `train.ipynb` и запускал ячейки
-  (текущий ноутбук содержит в себе некоторые результаты запуска ячеек)
-- Я старался обобщать все параметры в ноутбуке, чтобы модель тоже можно было запускать на других платформах
-- Советую быть аккуратным и все перепроверять, если используете
-- Параметры для сохранения результатов прописаны в ноутбуке
-  (при желании их можно вынести в конфигурационный файл)
+- Since I don’t have a GPU locally, I used the kaggle.com platform
+- On the kaggle.com platform, I opened the `train.ipynb` notebook and ran the cells
+  (the current notebook contains some results from running the cells)
+- I tried to generalize all the parameters in the laptop so that the model could also be run on other platforms
+- I advise you to be careful and double-check everything if you use
+- The parameters for saving the results are written in the laptop
+  (if desired, they can be placed in the configuration file)
