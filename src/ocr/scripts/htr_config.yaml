@@ -1,7 +1,6 @@
-save_dir: 'data/experiments'
-dataset_root: 'data/raw/SHIFT_Lab_CFT'
+save_dir: 'data/experiments/Cyrillic_Handwriting_CRNN'
+dataset_root: 'data/raw/Cyrillic_Handwriting'
 images_dir_name: 'images' # Name of the directory containing the images
-h5_filename: 'images.h5' # Name of the HDF5 file located in dataset_root
 image:
   height: 32
   width: 128

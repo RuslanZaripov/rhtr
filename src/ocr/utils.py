@@ -44,17 +44,17 @@ def val_loop(data_loader, model, decoder, logger, device):
     wer_avg = ocr.AverageMeter()
     cer_avg = ocr.AverageMeter()
 
-    strat_time = time.time()
+    start_time = time.time()
     for images, labels, _, _ in tqdm(data_loader, total=len(data_loader)):
         batch_size = len(labels)
 
-        label_preds = ocr.predict(images, model, decoder, device)
+        label_predictions = ocr.predict(images, model, decoder, device)
 
-        acc_avg.update(ocr.accuracy(labels, label_preds), batch_size)
-        wer_avg.update(ocr.wer(labels, label_preds), batch_size)
-        cer_avg.update(ocr.cer(labels, label_preds), batch_size)
+        acc_avg.update(ocr.accuracy(labels, label_predictions), batch_size)
+        wer_avg.update(ocr.wer(labels, label_predictions), batch_size)
+        cer_avg.update(ocr.cer(labels, label_predictions), batch_size)
 
-    elapsed_time = format_sec(time.time() - strat_time)
+    elapsed_time = format_sec(time.time() - start_time)
 
     logger.info(f'Validation: '
                 f'Acc: {acc_avg.avg:.4f}, '
@@ -90,4 +90,4 @@ class FilesLimitController:
         old_weights_path = self.saved_weights_paths.pop(0)
         if os.path.exists(old_weights_path):
             os.remove(old_weights_path)
-            self.logger.info(f"Weigths removed '{old_weights_path}' due to weight files count limit")
+            self.logger.info(f"Weights removed '{old_weights_path}' due to weight files count limit")

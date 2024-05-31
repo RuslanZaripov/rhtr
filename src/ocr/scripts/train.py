@@ -106,6 +106,8 @@ def get_data_loaders(config):
 def main(args):
     config = src.ocr.Config(args.config_path)
 
+    os.makedirs(config.get('save_dir'))
+
     log_path = os.path.join(config.get('save_dir'), 'train.log')
     logger = src.ocr.configure_logging(log_path)
 
@@ -118,9 +120,9 @@ def main(args):
     train_loader, val_loader = get_data_loaders(config)
 
     crnn = src.ocr.CRNN(1, img_height, img_width, num_class,
-                    map_to_seq_hidden=64,
-                    rnn_hidden=255,
-                    leaky_relu=False)
+                        map_to_seq_hidden=64,
+                        rnn_hidden=255,
+                        leaky_relu=False)
     """
     crnn = src.ocr.CRNN2(
         number_class_symbols=num_class,

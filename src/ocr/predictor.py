@@ -1,28 +1,20 @@
+from typing import List
+
 import torch
 import src.ocr
+from src.pipeline.abstract import Recognizer
 
 
 def predict(images, model, decoder, device):
-    """
-    Make model prediction.
-
-    images (torch.Tensor):
-        Batch with tensor images.
-    model (ocr.src.models.CRNN):
-        OCR model.
-    decoder: (ocr.tokenizer.OCRDecoder)
-    device (torch.device):
-        Torch device.
-    """
     model.eval()
     images = images.to(device)
     with torch.no_grad():
         output = model(images)
-    label_preds = decoder.decode(output)
-    return label_preds
+    label_predictions = decoder.decode(output)
+    return label_predictions
 
 
-class OCRTorchModel:
+class OCRTorchModel(Recognizer):
     def __init__(self, model_path, config_path):
         self.config = src.ocr.Config(config_path)
 
@@ -47,7 +39,7 @@ class OCRTorchModel:
             width=self.config.get_image('width'),
         )
 
-    def __call__(self, images):
+    def predict(self, images) -> List[str]:
         return predict(
             self.transforms(images),
             self.model, self.decoder, self.device
