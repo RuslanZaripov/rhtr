@@ -4,10 +4,6 @@
 
 # Structure description
 
-Note: since this is my first project of this kind, the project structure may not be very convenient.
-The same applies to the project code. I used it in the form in which it is now.
-It can be used as a basis for developing your own solution.
-
 - `/configs` - folder where json files with configuration are stored
 - `config.py` - code of the Config class for reading the json file with the training configuration
 - `dataset.py` - code used for image preprocessing and mask generation

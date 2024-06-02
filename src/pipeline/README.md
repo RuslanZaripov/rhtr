@@ -4,10 +4,6 @@
 
 ## Structure description
 
-Note: since this is my first project of this kind, the project structure may not be very convenient.
-The same applies to the project code. I used it in the form in which it is now.
-It can be used as a basis for developing your own solution.
-
 - `abstract.py` - contains abstract classes of recognition modules to generalize the code structure
 - `anglerestorer.py` - contains code for calculating the angle of rotation of the image
 - `config.py` - contains the code necessary to process the configuration file
