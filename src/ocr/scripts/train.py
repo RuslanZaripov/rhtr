@@ -80,7 +80,6 @@ def get_data_loaders(config):
     )
     train_loader = src.ocr.get_data_loader(
         dataset_root=config.get('dataset_root'),
-        images_dir_name=config.get('images_dir_name'),
         csv_filename=config.get_train('csv_filename'),
         h5_filename=config.get('h5_filename'),
         batch_size=config.get_train('batch_size'),
@@ -91,7 +90,6 @@ def get_data_loaders(config):
     )
     val_loader = src.ocr.get_data_loader(
         dataset_root=config.get('dataset_root'),
-        images_dir_name=config.get('images_dir_name'),
         csv_filename=config.get_val('csv_filename'),
         h5_filename=config.get('h5_filename'),
         batch_size=config.get_val('batch_size'),

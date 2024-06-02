@@ -12,7 +12,6 @@ import src.ocr.tokenizer
 
 def get_data_loader(
         dataset_root,
-        images_dir_name,
         csv_filename,
         h5_filename,
         batch_size,
@@ -22,7 +21,6 @@ def get_data_loader(
         drop_last,
 ):
     dataset = ImageDataset(root=dataset_root,
-                           images_dir_name=images_dir_name,
                            csv_filename=csv_filename,
                            h5_filename=h5_filename,
                            transform=transform)
@@ -37,9 +35,8 @@ def get_data_loader(
 
 
 class ImageDataset(Dataset):
-    def __init__(self, root, images_dir_name, csv_filename, h5_filename=None, transform=None):
+    def __init__(self, root, csv_filename, h5_filename=None, transform=None):
         self.dataset_root = root
-        self.images_dir_name = images_dir_name
         self.subset_name = os.path.splitext(csv_filename)[0]
         self.img_labels = pd.read_csv(filepath_or_buffer=f'{self.dataset_root}/{csv_filename}',
                                       delimiter='\t',
