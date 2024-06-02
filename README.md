@@ -2,7 +2,11 @@
 
 - Read this in other languages: [Russian](README.ru.md)
 
-# [Work demonstration](/static/video.mp4)
+- [Work demonstration](/static/video.mp4)
+
+![Recognition demonstration 1](/static/1.png)
+
+![Recognition demonstration 2](/static/2.png)
 
 # Move files into remote directory
 
