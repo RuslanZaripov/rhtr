@@ -1,4 +1,8 @@
-# [RHTR](./static/video.mp4)
+# Russian Handwritten Text Recognition
+
+- Read this in other languages: [Russian](README.ru.md)
+
+# [Work demonstration](/static/video.mp4)
 
 # Move files into remote directory
 
